@@ -11,13 +11,14 @@ import (
 	"github.com/google/uuid"
 )
 
-const createUser = `-- name: CreateUser :exec
+const createUser = `-- name: CreateUser :one
 INSERT INTO users (
     id, login, age, location, gender
 ) VALUES (
     $1::uuid, $2::varchar(50),
     $3::integer, $4::varchar, $5::varchar(7)
 )
+RETURNING id, login, age, location, gender
 `
 
 type CreateUserParams struct {
@@ -28,13 +29,21 @@ type CreateUserParams struct {
 	Gender   string
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
-	_, err := q.db.Exec(ctx, createUser,
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, createUser,
 		arg.ID,
 		arg.Login,
 		arg.Age,
 		arg.Location,
 		arg.Gender,
 	)
-	return err
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Login,
+		&i.Age,
+		&i.Location,
+		&i.Gender,
+	)
+	return i, err
 }
