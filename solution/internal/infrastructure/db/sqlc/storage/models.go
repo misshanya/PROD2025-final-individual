@@ -13,6 +13,12 @@ type Advertiser struct {
 	Name string
 }
 
+type MlScore struct {
+	ClientID     uuid.UUID
+	AdvertiserID uuid.UUID
+	Score        int32
+}
+
 type User struct {
 	ID       uuid.UUID
 	Login    string
