@@ -37,11 +37,21 @@ func main() {
 	// Init user handler
 	userHandler := handlers.NewUserHandler(UserService)
 
+	// Init advertiser repository and service
+	advertiserRepo := repository.NewAdvertiserRepository(queries)
+	advertiserService := app.NewAdvertiserService(*advertiserRepo)
+
+	// Init advertiser handler
+	advertiserHandler := handlers.NewAdvertiserHandler(advertiserService)
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
 	r.Post("/clients/bulk", userHandler.CreateUsers)
 	r.Get("/clients/{clientId}", userHandler.GetByID)
+
+	r.Post("/advertisers/bulk", advertiserHandler.CreateAdvertisers)
+	r.Get("/advertisers/{advertiserId}", advertiserHandler.GetByID)
 
 	log.Printf("Starting server on %s", cfg.ServerAddress)
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != nil {

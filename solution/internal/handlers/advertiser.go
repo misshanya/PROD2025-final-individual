@@ -11,64 +11,64 @@ import (
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/domain"
 )
 
-type UserHandler struct {
-	service *app.UserService
+type AdvertiserHandler struct {
+	service *app.AdvertiserService
 }
 
-func NewUserHandler(service *app.UserService) *UserHandler {
-	return &UserHandler{
+func NewAdvertiserHandler(service *app.AdvertiserService) *AdvertiserHandler {
+	return &AdvertiserHandler{
 		service: service,
 	}
 }
 
-func (h *UserHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
+func (h *AdvertiserHandler) CreateAdvertisers(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var users []*domain.User
+	var advertisers []*domain.Advertiser
 
-	if err := json.NewDecoder(r.Body).Decode(&users); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&advertisers); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
-	newUsers, err := h.service.CreateUsers(ctx, users)
+	newAdvertisers, err := h.service.CreateAdvertisers(ctx, advertisers)
 	if err != nil {
 		switch err {
-		case domain.ErrUserAlreadyExists:
+		case domain.ErrAdvertiserAlreadyExists:
 			http.Error(w, err.Error(), http.StatusConflict)
 		case domain.ErrBadRequest:
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		default:
-			log.Printf("[INTERNAL ERROR] failed to create client: %v", err)
+			log.Printf("[INTERNAL ERROR] failed to create advertiser: %v", err)
 			http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(newUsers)
+	json.NewEncoder(w).Encode(newAdvertisers)
 }
 
-func (h *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+func (h *AdvertiserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	clientID, err := uuid.Parse(chi.URLParam(r, "clientId"))
+	advertiserID, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
 	if err != nil {
-		log.Printf("failed to convert clientID to uuid: %v", err)
+		log.Printf("failed to convert advertiserID to uuid: %v", err)
 		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
 		return
 	}
 
-	client, err := h.service.GetByID(ctx, clientID)
+	advertiser, err := h.service.GetByID(ctx, advertiserID)
 	if err != nil {
 		switch err {
-		case domain.ErrUserNotFound:
+		case domain.ErrAdvertiserNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		default:
-			log.Printf("[INTERNAL ERROR] failed to get client: %v", err)
+			log.Printf("[INTERNAL ERROR] failed to get advertiser: %v", err)
 			http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
 		}
 	}
 
-	json.NewEncoder(w).Encode(client)
+	json.NewEncoder(w).Encode(advertiser)
 }

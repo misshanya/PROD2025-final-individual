@@ -8,6 +8,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type Advertiser struct {
+	ID   uuid.UUID
+	Name string
+}
+
 type User struct {
 	ID       uuid.UUID
 	Login    string
