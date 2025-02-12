@@ -72,3 +72,23 @@ func (h *AdvertiserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(advertiser)
 }
+
+func (h *AdvertiserHandler) CreateUpdateMLScore(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var score *domain.MLScore
+
+	if err := json.NewDecoder(r.Body).Decode(&score); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	newScore, err := h.service.CreateUpdateMLScore(ctx, score)
+	if err != nil {
+		log.Printf("failed to create or update ml score: %v", err)
+		http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(newScore)
+}

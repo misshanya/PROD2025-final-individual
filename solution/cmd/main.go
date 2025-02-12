@@ -53,6 +53,8 @@ func main() {
 	r.Post("/advertisers/bulk", advertiserHandler.CreateAdvertisers)
 	r.Get("/advertisers/{advertiserId}", advertiserHandler.GetByID)
 
+	r.Post("/ml-scores", advertiserHandler.CreateUpdateMLScore)
+
 	log.Printf("Starting server on %s", cfg.ServerAddress)
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != nil {
 		log.Fatalf("failed to start server: %v", err)

@@ -29,6 +29,25 @@ func (q *Queries) CreateAdvertiser(ctx context.Context, arg CreateAdvertiserPara
 	return err
 }
 
+const createMLScore = `-- name: CreateMLScore :exec
+INSERT INTO ml_scores (
+    client_id, advertiser_id, score
+) VALUES (
+    $1::uuid, $2::uuid, $3::int
+)
+`
+
+type CreateMLScoreParams struct {
+	ClientID     uuid.UUID
+	AdvertiserID uuid.UUID
+	Score        int32
+}
+
+func (q *Queries) CreateMLScore(ctx context.Context, arg CreateMLScoreParams) error {
+	_, err := q.db.Exec(ctx, createMLScore, arg.ClientID, arg.AdvertiserID, arg.Score)
+	return err
+}
+
 const getAdvertiserByID = `-- name: GetAdvertiserByID :one
 SELECT id, name FROM advertisers
 WHERE id = $1::uuid
@@ -39,4 +58,42 @@ func (q *Queries) GetAdvertiserByID(ctx context.Context, id uuid.UUID) (Advertis
 	var i Advertiser
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
+}
+
+const getMLScoreByIDs = `-- name: GetMLScoreByIDs :one
+SELECT client_id, advertiser_id, score FROM ml_scores
+WHERE
+client_id = $1::uuid AND
+advertiser_id = $2::uuid
+`
+
+type GetMLScoreByIDsParams struct {
+	ClientID     uuid.UUID
+	AdvertiserID uuid.UUID
+}
+
+func (q *Queries) GetMLScoreByIDs(ctx context.Context, arg GetMLScoreByIDsParams) (MlScore, error) {
+	row := q.db.QueryRow(ctx, getMLScoreByIDs, arg.ClientID, arg.AdvertiserID)
+	var i MlScore
+	err := row.Scan(&i.ClientID, &i.AdvertiserID, &i.Score)
+	return i, err
+}
+
+const updateMLScore = `-- name: UpdateMLScore :exec
+UPDATE ml_scores
+SET score = $1::int
+WHERE
+client_id = $2::uuid AND
+advertiser_id = $3::uuid
+`
+
+type UpdateMLScoreParams struct {
+	Score        int32
+	ClientID     uuid.UUID
+	AdvertiserID uuid.UUID
+}
+
+func (q *Queries) UpdateMLScore(ctx context.Context, arg UpdateMLScoreParams) error {
+	_, err := q.db.Exec(ctx, updateMLScore, arg.Score, arg.ClientID, arg.AdvertiserID)
+	return err
 }

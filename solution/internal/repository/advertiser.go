@@ -50,3 +50,44 @@ func (r *AdvertiserRepository) GetByID(ctx context.Context, id uuid.UUID) (*doma
 		Name: advertiser.Name,
 	}, nil
 }
+
+func (r *AdvertiserRepository) CreateMLScore(ctx context.Context, score *domain.MLScore) error {
+	err := r.queries.CreateMLScore(ctx, storage.CreateMLScoreParams{
+		ClientID: score.ClientID,
+		AdvertiserID: score.AdvertiserID,
+		Score: score.Score,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *AdvertiserRepository) GetMLScore(ctx context.Context, clientID, advertiserID uuid.UUID) (*domain.MLScore, error) {
+	score, err := r.queries.GetMLScoreByIDs(ctx, storage.GetMLScoreByIDsParams{
+		ClientID: clientID,
+		AdvertiserID: advertiserID,
+	})
+	if err == nil {
+		return &domain.MLScore{
+			ClientID: score.ClientID,
+			AdvertiserID: score.AdvertiserID,
+			Score: score.Score,
+		}, nil
+	} else if err == pgx.ErrNoRows {
+		return &domain.MLScore{}, pgx.ErrNoRows
+	}
+	return nil, err
+}
+
+func (r *AdvertiserRepository) UpdateMLScore(ctx context.Context, score *domain.MLScore) error {
+	err := r.queries.UpdateMLScore(ctx, storage.UpdateMLScoreParams{
+		Score: score.Score,
+		ClientID: score.ClientID,
+		AdvertiserID: score.AdvertiserID,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
