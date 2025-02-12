@@ -37,7 +37,6 @@ func main() {
 	// Init user handler
 	userHandler := handlers.NewUserHandler(UserService)
 
-
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 

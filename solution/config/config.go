@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-	DatabaseURL string
+	DatabaseURL   string
 	ServerAddress string
 }
 
@@ -22,7 +22,7 @@ func NewConfig() *Config {
 	serverAddress := os.Getenv("SERVER_ADDRESS")
 
 	return &Config{
-		DatabaseURL: dbURL,
+		DatabaseURL:   dbURL,
 		ServerAddress: serverAddress,
 	}
 }
