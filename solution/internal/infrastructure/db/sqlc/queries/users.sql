@@ -6,3 +6,7 @@ INSERT INTO users (
     @age::integer, @location::varchar, @gender::varchar(7)
 )
 RETURNING *;
+
+-- name: GetUserByID :one
+SELECT * FROM users
+WHERE id = @id::uuid;

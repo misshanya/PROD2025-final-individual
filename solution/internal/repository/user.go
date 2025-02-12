@@ -19,7 +19,12 @@ func NewUserRepository(queries *storage.Queries) *UserRepository {
 
 func (r *UserRepository) Create(ctx context.Context, users []*domain.User) ([]*domain.User, error) {
 	for _, user := range users {
-		err := r.queries.CreateUser(ctx, storage.CreateUserParams{
+		_, err := r.queries.GetUserByID(ctx, user.ID)
+		if err == nil {
+			return []*domain.User{}, domain.ErrUserAlreadyExists
+		}
+
+		_, err = r.queries.CreateUser(ctx, storage.CreateUserParams{
 			ID: user.ID,
 			Login: user.Login,
 			Age: user.Age,

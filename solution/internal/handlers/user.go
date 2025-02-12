@@ -30,7 +30,14 @@ func (h *UserHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 
 	newUsers, err := h.service.CreateUsers(ctx, users)
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		switch err {
+		case domain.ErrUserAlreadyExists:
+			http.Error(w, err.Error(), http.StatusConflict)
+		case domain.ErrBadRequest:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		case domain.ErrInternalServerError:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 
