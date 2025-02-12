@@ -41,6 +41,7 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Post("/clients/bulk", userHandler.CreateUsers)
+	r.Get("/clients/{clientId}", userHandler.GetByID)
 
 	log.Printf("Starting server on %s", cfg.ServerAddress)
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != nil {

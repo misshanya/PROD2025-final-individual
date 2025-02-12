@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/domain"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/repository"
 )
@@ -38,4 +39,12 @@ func validateUser(user *domain.User) error {
 		return fmt.Errorf("age must be greater than 0 and lower than 200")
 	}
 	return nil
+}
+
+func (s *UserService) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

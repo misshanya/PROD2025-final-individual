@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/domain"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/infrastructure/db/sqlc/storage"
 )
@@ -37,4 +39,20 @@ func (r *UserRepository) Create(ctx context.Context, users []*domain.User) ([]*d
 	}
 	
 	return users, nil
+}
+
+func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+	user, err := r.queries.GetUserByID(ctx, id)
+	if err == pgx.ErrNoRows {
+		return nil, domain.ErrUserNotFound
+	} else if err != nil {
+		return nil, err
+	}
+	return &domain.User{
+		ID: user.ID,
+		Login: user.Login,
+		Age: user.Age,
+		Location: user.Location,
+		Gender: user.Gender,
+	}, nil
 }
