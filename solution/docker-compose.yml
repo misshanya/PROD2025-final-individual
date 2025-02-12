@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  backend:
+    build: .
+
+    environment:
+      - SERVER_ADDRESS=:8080
+      - DATABASE_URL=postgresql://lotty:somepassword@db:5432/proood
+    ports:
+      - 8080:8080
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    restart: unless-stopped
+  
+  db:
+    image: postgres:latest
+
+    environment:
+      - POSTGRES_USER=lotty
+      - POSTGRES_PASSWORD=somepassword
+      - POSTGRES_DB=proood
+    
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lotty -d proood"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    
+    restart: unless-stopped
+
+volumes:
+  db_data:
