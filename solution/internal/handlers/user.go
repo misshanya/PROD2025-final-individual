@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/app"
@@ -37,6 +38,9 @@ func (h *UserHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		case domain.ErrInternalServerError:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+		default:
+			log.Printf("[INTERNAL ERROR] failed to create client: %v", err)
+			http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
