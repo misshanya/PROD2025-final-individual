@@ -79,18 +79,18 @@ func (r *CampaignRepository) CreateCampaign(ctx context.Context, advertiserID uu
 
 	// Convert db responses to my structures
 	targeting := domain.Targeting{}
-		if targetingDB.Gender.Valid {
-			targeting.Gender = &targetingDB.Gender.String
-		}
-		if targetingDB.AgeFrom.Valid {
-			targeting.AgeFrom = &targetingDB.AgeFrom.Int32
-		}
-		if targetingDB.AgeTo.Valid {
-			targeting.AgeTo = &targetingDB.AgeFrom.Int32
-		}
-		if targetingDB.Location.Valid {
-			targeting.Location = &targetingDB.Location.String
-		}
+	if targetingDB.Gender.Valid {
+		targeting.Gender = &targetingDB.Gender.String
+	}
+	if targetingDB.AgeFrom.Valid {
+		targeting.AgeFrom = &targetingDB.AgeFrom.Int32
+	}
+	if targetingDB.AgeTo.Valid {
+		targeting.AgeTo = &targetingDB.AgeFrom.Int32
+	}
+	if targetingDB.Location.Valid {
+		targeting.Location = &targetingDB.Location.String
+	}
 	campaign := domain.Campaign{
 		ID: campaignDB.ID,
 		AdvertiserID: campaignDB.AdvertiserID,
