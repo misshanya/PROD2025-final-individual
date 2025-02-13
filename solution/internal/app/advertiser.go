@@ -19,8 +19,8 @@ func NewAdvertiserService(repo repository.AdvertiserRepository) *AdvertiserServi
 	}
 }
 
-func (s *AdvertiserService) CreateAdvertisers(ctx context.Context, advertisers []*domain.Advertiser) ([]*domain.Advertiser, error) {
-	newAdvertisers, err := s.repo.Create(ctx, advertisers)
+func (s *AdvertiserService) CreateUpdateAdvertisers(ctx context.Context, advertisers []*domain.Advertiser) ([]*domain.Advertiser, error) {
+	newAdvertisers, err := s.repo.CreateUpdateAdvertisers(ctx, advertisers)
 	if err != nil {
 		return []*domain.Advertiser{}, err
 	}

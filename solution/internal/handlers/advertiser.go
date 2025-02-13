@@ -31,7 +31,7 @@ func (h *AdvertiserHandler) CreateAdvertisers(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	newAdvertisers, err := h.service.CreateAdvertisers(ctx, advertisers)
+	newAdvertisers, err := h.service.CreateUpdateAdvertisers(ctx, advertisers)
 	if err != nil {
 		switch err {
 		case domain.ErrAdvertiserAlreadyExists:

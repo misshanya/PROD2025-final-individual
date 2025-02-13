@@ -19,19 +19,25 @@ func NewAdvertiserRepository(queries *storage.Queries) *AdvertiserRepository {
 	}
 }
 
-func (r *AdvertiserRepository) Create(ctx context.Context, advertisers []*domain.Advertiser) ([]*domain.Advertiser, error) {
+func (r *AdvertiserRepository) CreateUpdateAdvertisers(ctx context.Context, advertisers []*domain.Advertiser) ([]*domain.Advertiser, error) {
 	for _, advertiser := range advertisers {
 		_, err := r.queries.GetAdvertiserByID(ctx, advertiser.ID)
-		if err == nil {
-			return []*domain.Advertiser{}, domain.ErrAdvertiserAlreadyExists
-		}
-
-		err = r.queries.CreateAdvertiser(ctx, storage.CreateAdvertiserParams{
-			ID: advertiser.ID,
-			Name: advertiser.Name,
-		})
-		if err != nil {
-			return []*domain.Advertiser{}, err
+		if err == pgx.ErrNoRows {
+			err = r.queries.CreateAdvertiser(ctx, storage.CreateAdvertiserParams{
+				ID: advertiser.ID,
+				Name: advertiser.Name,
+			})
+			if err != nil {
+				return []*domain.Advertiser{}, err
+			}
+		} else if err == nil {
+			err = r.queries.UpdateAdvertiser(ctx, storage.UpdateAdvertiserParams{
+				ID: advertiser.ID,
+				Name: advertiser.Name,
+			})
+			if err != nil {
+				return []*domain.Advertiser{}, err
+			}
 		}
 	}
 	

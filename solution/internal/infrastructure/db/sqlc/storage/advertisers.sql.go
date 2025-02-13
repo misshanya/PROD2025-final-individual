@@ -79,6 +79,22 @@ func (q *Queries) GetMLScoreByIDs(ctx context.Context, arg GetMLScoreByIDsParams
 	return i, err
 }
 
+const updateAdvertiser = `-- name: UpdateAdvertiser :exec
+UPDATE advertisers
+SET name = $1::varchar
+WHERE id = $2::uuid
+`
+
+type UpdateAdvertiserParams struct {
+	Name string
+	ID   uuid.UUID
+}
+
+func (q *Queries) UpdateAdvertiser(ctx context.Context, arg UpdateAdvertiserParams) error {
+	_, err := q.db.Exec(ctx, updateAdvertiser, arg.Name, arg.ID)
+	return err
+}
+
 const updateMLScore = `-- name: UpdateMLScore :exec
 UPDATE ml_scores
 SET score = $1::int

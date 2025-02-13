@@ -9,6 +9,11 @@ INSERT INTO advertisers (
 SELECT * FROM advertisers
 WHERE id = @id::uuid;
 
+-- name: UpdateAdvertiser :exec
+UPDATE advertisers
+SET name = @name::varchar
+WHERE id = @id::uuid;
+
 -- name: CreateMLScore :exec
 INSERT INTO ml_scores (
     client_id, advertiser_id, score
