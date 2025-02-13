@@ -86,7 +86,7 @@ func (r *CampaignRepository) CreateCampaign(ctx context.Context, advertiserID uu
 		targeting.AgeFrom = &targetingDB.AgeFrom.Int32
 	}
 	if targetingDB.AgeTo.Valid {
-		targeting.AgeTo = &targetingDB.AgeFrom.Int32
+		targeting.AgeTo = &targetingDB.AgeTo.Int32
 	}
 	if targetingDB.Location.Valid {
 		targeting.Location = &targetingDB.Location.String
@@ -145,7 +145,7 @@ func (r *CampaignRepository) GetCampaignsByAdvertiserID(ctx context.Context, adv
 			targeting.AgeFrom = &campaignDB.AgeFrom.Int32
 		}
 		if campaignDB.AgeTo.Valid {
-			targeting.AgeTo = &campaignDB.AgeFrom.Int32
+			targeting.AgeTo = &campaignDB.AgeTo.Int32
 		}
 		if campaignDB.Location.Valid {
 			targeting.Location = &campaignDB.Location.String
