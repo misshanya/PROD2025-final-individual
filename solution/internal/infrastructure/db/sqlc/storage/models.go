@@ -6,11 +6,34 @@ package storage
 
 import (
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Advertiser struct {
 	ID   uuid.UUID
 	Name string
+}
+
+type Campaign struct {
+	ID                uuid.UUID
+	AdvertiserID      uuid.UUID
+	ImpressionsLimit  int64
+	ClicksLimit       int64
+	CostPerImpression pgtype.Numeric
+	CostPerClick      pgtype.Numeric
+	AdTitle           string
+	AdText            string
+	StartDate         int32
+	EndDate           int32
+}
+
+type CampaignsTargeting struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Gender     pgtype.Text
+	AgeFrom    pgtype.Int4
+	AgeTo      pgtype.Int4
+	Location   pgtype.Text
 }
 
 type MlScore struct {

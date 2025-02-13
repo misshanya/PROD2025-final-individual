@@ -44,6 +44,13 @@ func main() {
 	// Init advertiser handler
 	advertiserHandler := handlers.NewAdvertiserHandler(advertiserService)
 
+	// Init campaign repository and service
+	campaignRepo := repository.NewCampaignRepository(queries, conn)
+	campaignService := app.NewCampaignService(*campaignRepo)
+
+	// Init campaign handler
+	campaignHandler := handlers.NewCampaignHandler(campaignService)
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
@@ -54,6 +61,9 @@ func main() {
 	r.Get("/advertisers/{advertiserId}", advertiserHandler.GetByID)
 
 	r.Post("/ml-scores", advertiserHandler.CreateUpdateMLScore)
+
+	r.Post("/advertisers/{advertiserId}/campaigns", campaignHandler.CreateCampaign)
+	r.Get("/advertisers/{advertiserId}/campaigns", campaignHandler.GetCampaignsByAdvertiserID)
 
 	log.Printf("Starting server on %s", cfg.ServerAddress)
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != nil {
