@@ -65,3 +65,32 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 	)
 	return i, err
 }
+
+const updateUser = `-- name: UpdateUser :exec
+UPDATE users
+SET
+login = $1::varchar,
+age = $2::int,
+location = $3::varchar,
+gender = $4::varchar(7)
+WHERE id = $5::uuid
+`
+
+type UpdateUserParams struct {
+	Login    string
+	Age      int32
+	Location string
+	Gender   string
+	ID       uuid.UUID
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.Exec(ctx, updateUser,
+		arg.Login,
+		arg.Age,
+		arg.Location,
+		arg.Gender,
+		arg.ID,
+	)
+	return err
+}

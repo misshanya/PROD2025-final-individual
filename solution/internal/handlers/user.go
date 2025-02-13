@@ -31,11 +31,9 @@ func (h *UserHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUsers, err := h.service.CreateUsers(ctx, users)
+	newUsers, err := h.service.CreateUpdateUsers(ctx, users)
 	if err != nil {
 		switch err {
-		case domain.ErrUserAlreadyExists:
-			http.Error(w, err.Error(), http.StatusConflict)
 		case domain.ErrBadRequest:
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		default:

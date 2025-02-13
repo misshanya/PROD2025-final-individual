@@ -19,22 +19,30 @@ func NewUserRepository(queries *storage.Queries) *UserRepository {
 	}
 }
 
-func (r *UserRepository) Create(ctx context.Context, users []*domain.User) ([]*domain.User, error) {
+func (r *UserRepository) CreateUpdateUsers(ctx context.Context, users []*domain.User) ([]*domain.User, error) {
 	for _, user := range users {
-		_, err := r.queries.GetUserByID(ctx, user.ID)
-		if err == nil {
-			return []*domain.User{}, domain.ErrUserAlreadyExists
-		}
-
-		_, err = r.queries.CreateUser(ctx, storage.CreateUserParams{
-			ID: user.ID,
-			Login: user.Login,
-			Age: user.Age,
-			Location: user.Location,
-			Gender: user.Gender,
-		})
-		if err != nil {
-			return []*domain.User{}, err
+		if _, err := r.queries.GetUserByID(ctx, user.ID); err == pgx.ErrNoRows {
+			_, err := r.queries.CreateUser(ctx, storage.CreateUserParams{
+				ID: user.ID,
+				Login: user.Login,
+				Age: user.Age,
+				Location: user.Location,
+				Gender: user.Gender,
+			})
+			if err != nil {
+				return []*domain.User{}, err
+			}
+		} else if err == nil {
+			err := r.queries.UpdateUser(ctx, storage.UpdateUserParams{
+				ID: user.ID,
+				Login: user.Login,
+				Age: user.Age,
+				Location: user.Location,
+				Gender: user.Gender,
+			})
+			if err != nil {
+				return []*domain.User{}, err
+			}
 		}
 	}
 	

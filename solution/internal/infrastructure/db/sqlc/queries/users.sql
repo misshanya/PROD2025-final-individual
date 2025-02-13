@@ -10,3 +10,12 @@ RETURNING *;
 -- name: GetUserByID :one
 SELECT * FROM users
 WHERE id = @id::uuid;
+
+-- name: UpdateUser :exec
+UPDATE users
+SET
+login = @login::varchar,
+age = @age::int,
+location = @location::varchar,
+gender = @gender::varchar(7)
+WHERE id = @id::uuid;

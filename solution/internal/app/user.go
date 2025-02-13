@@ -19,14 +19,14 @@ func NewUserService(repo repository.UserRepository) *UserService {
 	}
 }
 
-func (s *UserService) CreateUsers(ctx context.Context, users []*domain.User) ([]*domain.User, error) {
+func (s *UserService) CreateUpdateUsers(ctx context.Context, users []*domain.User) ([]*domain.User, error) {
 	for _, user := range users {
 		if err := validateUser(user); err != nil {
 			return []*domain.User{}, domain.ErrBadRequest
 		}
 	}
 
-	newUsers, err := s.repo.Create(ctx, users)
+	newUsers, err := s.repo.CreateUpdateUsers(ctx, users)
 	if err != nil {
 		return []*domain.User{}, err
 	}
