@@ -221,3 +221,8 @@ func (r *CampaignRepository) GetCampaignByID(ctx context.Context, campaignID uui
 		Targeting: targeting,
 	}, nil
 }
+
+func (r *CampaignRepository) DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error {
+	err := r.queries.DeleteCampaignByID(ctx, campaignID)
+	return err
+}

@@ -112,6 +112,16 @@ func (q *Queries) CreateCampaignTargeting(ctx context.Context, arg CreateCampaig
 	return i, err
 }
 
+const deleteCampaignByID = `-- name: DeleteCampaignByID :exec
+DELETE FROM campaigns
+WHERE id = $1::uuid
+`
+
+func (q *Queries) DeleteCampaignByID(ctx context.Context, campaignID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteCampaignByID, campaignID)
+	return err
+}
+
 const getCampaignWithTargetingByID = `-- name: GetCampaignWithTargetingByID :one
 SELECT campaigns.id, advertiser_id, impressions_limit, clicks_limit, cost_per_impression, cost_per_click, ad_title, ad_text, start_date, end_date, campaigns_targeting.id, campaign_id, gender, age_from, age_to, location FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
 WHERE campaigns.id = $1::uuid

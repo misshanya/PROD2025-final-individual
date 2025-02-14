@@ -65,6 +65,7 @@ func main() {
 	r.Post("/advertisers/{advertiserId}/campaigns", campaignHandler.CreateCampaign)
 	r.Get("/advertisers/{advertiserId}/campaigns", campaignHandler.GetCampaignsByAdvertiserID)
 	r.Get("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.GetCampaignByID)
+	r.Delete("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.DeleteCampaign)
 
 	log.Printf("Starting server on %s", cfg.ServerAddress)
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != nil {

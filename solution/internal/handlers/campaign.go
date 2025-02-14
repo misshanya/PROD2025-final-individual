@@ -123,3 +123,28 @@ func (h *CampaignHandler) GetCampaignByID(w http.ResponseWriter, r *http.Request
 
 	json.NewEncoder(w).Encode(campaign)
 }
+
+func (h *CampaignHandler) DeleteCampaign(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	_, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
+	if err != nil {
+		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
+		return
+	}
+
+	campaignID, err := uuid.Parse(chi.URLParam(r, "campaignId"))
+	if err != nil {
+		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteCampaign(ctx, campaignID)
+	if err != nil {
+		log.Printf("[INTERNAL ERROR] failed to delete campaign: %v", err)
+		http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

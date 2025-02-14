@@ -36,3 +36,7 @@ LIMIT $1 OFFSET $2;
 -- name: GetCampaignWithTargetingByID :one
 SELECT * FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
 WHERE campaigns.id = @campaign_id::uuid;
+
+-- name: DeleteCampaignByID :exec
+DELETE FROM campaigns
+WHERE id = @campaign_id::uuid;
