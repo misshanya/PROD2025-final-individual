@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5"
+	"github.com/redis/go-redis/v9"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/app"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/config"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/handlers"
@@ -29,6 +30,17 @@ func main() {
 
 	// Init SQL queries
 	queries := storage.New(conn)
+
+	// Init redis connection
+	rdb := redis.NewClient(&redis.Options{
+		Addr: cfg.Redis.Address,
+		Password: cfg.Redis.Password,
+		DB: cfg.Redis.DB,
+	})
+
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		log.Fatalf("failed to ping redis: %v", err)
+	}
 
 	// Init user repository and service
 	userRepo := repository.NewUserRepository(queries)
