@@ -112,6 +112,54 @@ func (q *Queries) CreateCampaignTargeting(ctx context.Context, arg CreateCampaig
 	return i, err
 }
 
+const getCampaignWithTargetingByID = `-- name: GetCampaignWithTargetingByID :one
+SELECT campaigns.id, advertiser_id, impressions_limit, clicks_limit, cost_per_impression, cost_per_click, ad_title, ad_text, start_date, end_date, campaigns_targeting.id, campaign_id, gender, age_from, age_to, location FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
+WHERE campaigns.id = $1::uuid
+`
+
+type GetCampaignWithTargetingByIDRow struct {
+	ID                uuid.UUID
+	AdvertiserID      uuid.UUID
+	ImpressionsLimit  int64
+	ClicksLimit       int64
+	CostPerImpression pgtype.Numeric
+	CostPerClick      pgtype.Numeric
+	AdTitle           string
+	AdText            string
+	StartDate         int32
+	EndDate           int32
+	ID_2              uuid.UUID
+	CampaignID        uuid.UUID
+	Gender            pgtype.Text
+	AgeFrom           pgtype.Int4
+	AgeTo             pgtype.Int4
+	Location          pgtype.Text
+}
+
+func (q *Queries) GetCampaignWithTargetingByID(ctx context.Context, campaignID uuid.UUID) (GetCampaignWithTargetingByIDRow, error) {
+	row := q.db.QueryRow(ctx, getCampaignWithTargetingByID, campaignID)
+	var i GetCampaignWithTargetingByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.AdvertiserID,
+		&i.ImpressionsLimit,
+		&i.ClicksLimit,
+		&i.CostPerImpression,
+		&i.CostPerClick,
+		&i.AdTitle,
+		&i.AdText,
+		&i.StartDate,
+		&i.EndDate,
+		&i.ID_2,
+		&i.CampaignID,
+		&i.Gender,
+		&i.AgeFrom,
+		&i.AgeTo,
+		&i.Location,
+	)
+	return i, err
+}
+
 const getCampaignsWithTargetingByAdvertiserID = `-- name: GetCampaignsWithTargetingByAdvertiserID :many
 SELECT campaigns.id, advertiser_id, impressions_limit, clicks_limit, cost_per_impression, cost_per_click, ad_title, ad_text, start_date, end_date, campaigns_targeting.id, campaign_id, gender, age_from, age_to, location FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
 WHERE advertiser_id = $3::uuid

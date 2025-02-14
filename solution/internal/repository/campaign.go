@@ -167,3 +167,57 @@ func (r *CampaignRepository) GetCampaignsByAdvertiserID(ctx context.Context, adv
 
 	return campaigns, nil
 }
+
+func (r *CampaignRepository) GetCampaignByID(ctx context.Context, campaignID uuid.UUID) (*domain.Campaign, error) {
+	campaignDB, err := r.queries.GetCampaignWithTargetingByID(ctx, campaignID)
+	if err == pgx.ErrNoRows {
+		return nil, domain.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	// Convert cost per impression and cost per click to float64 values
+	var costPerImpression float64
+	costPerImpressionFloatDB, err := campaignDB.CostPerImpression.Float64Value()
+	if err != nil {
+		return nil, err
+	}
+	costPerImpression = costPerImpressionFloatDB.Float64
+
+	var costPerClick float64
+	costPerClickFloatDB, err := campaignDB.CostPerClick.Float64Value()
+	if err != nil {
+		return nil, err
+	}
+	costPerClick = costPerClickFloatDB.Float64
+
+
+	targeting := domain.Targeting{}
+
+	if campaignDB.Gender.Valid {
+		targeting.Gender = &campaignDB.Gender.String
+	}
+	if campaignDB.AgeFrom.Valid {
+		targeting.AgeFrom = &campaignDB.AgeFrom.Int32
+	}
+	if campaignDB.AgeTo.Valid {
+		targeting.AgeTo = &campaignDB.AgeTo.Int32
+	}
+	if campaignDB.Location.Valid {
+		targeting.Location = &campaignDB.Location.String
+	}
+
+	return &domain.Campaign{
+		ID: campaignDB.ID,
+		AdvertiserID: campaignDB.AdvertiserID,
+		ImpressionsLimit: campaignDB.ImpressionsLimit,
+		ClicksLimit: campaignDB.ClicksLimit,
+		CostPerImpression: costPerImpression,
+		CostPerClick: costPerClick,
+		AdTitle: campaignDB.AdTitle,
+		AdText: campaignDB.AdText,
+		StartDate: campaignDB.StartDate,
+		EndDate: campaignDB.EndDate,
+		Targeting: targeting,
+	}, nil
+}

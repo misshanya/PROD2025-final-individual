@@ -92,3 +92,34 @@ func (h *CampaignHandler) GetCampaignsByAdvertiserID(w http.ResponseWriter, r *h
 
 	json.NewEncoder(w).Encode(campaigns)
 }
+
+func (h *CampaignHandler) GetCampaignByID(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	_, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
+	if err != nil {
+		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
+		return
+	}
+
+	campaignID, err := uuid.Parse(chi.URLParam(r, "campaignId"))
+	if err != nil {
+		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
+		return
+	}
+
+	campaign, err := h.service.GetCampaignByID(ctx, campaignID)
+	if err != nil {
+		switch err {
+		case domain.ErrNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		default:
+			log.Printf("[INTERNAL ERROR] failed to get campaign by id: %v", err)
+			http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	json.NewEncoder(w).Encode(campaign)
+}

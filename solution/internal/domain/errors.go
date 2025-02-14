@@ -12,6 +12,7 @@ var (
 	ErrInternalServerError = errors.New("something went wrong :(")
 	ErrUserAlreadyExists = errors.New("client already exists")
 	ErrAdvertiserAlreadyExists = errors.New("advertiser already exists")
+	ErrNotFound = errors.New("not found")
 	ErrUserNotFound      = errors.New("client not found")
 	ErrAdvertiserNotFound = errors.New("advertiser not found")
 )

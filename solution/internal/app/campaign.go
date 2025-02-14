@@ -34,3 +34,11 @@ func (s *CampaignService) GetCampaignsByAdvertiserID(ctx context.Context, advert
 	}
 	return campaigns, nil
 }
+
+func (s *CampaignService) GetCampaignByID(ctx context.Context, campaignID uuid.UUID) (*domain.Campaign, error) {
+	campaign, err := s.repo.GetCampaignByID(ctx, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	return campaign, nil
+}
