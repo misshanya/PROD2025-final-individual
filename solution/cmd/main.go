@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"
+	redisRepo "gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/repository/redis"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/app"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/config"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/handlers"
@@ -63,6 +64,13 @@ func main() {
 	// Init campaign handler
 	campaignHandler := handlers.NewCampaignHandler(campaignService)
 
+	// Init time repository and service
+	timeRepo := redisRepo.NewTimeRepository(rdb)
+	timeService := app.NewTimeService(*timeRepo)
+
+	// Init time handler
+	timeHandler := handlers.NewTimeHandler(timeService)
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
@@ -79,6 +87,8 @@ func main() {
 	r.Get("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.GetCampaignByID)
 	r.Put("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.UpdateCampaign)
 	r.Delete("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.DeleteCampaign)
+
+	r.Post("/time/advance", timeHandler.SetCurrentDate)
 
 	log.Printf("Starting server on %s", cfg.ServerAddress)
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != nil {
