@@ -243,9 +243,10 @@ UPDATE campaigns
 SET
     impressions_limit = $1::bigint, clicks_limit = $2::bigint,
     cost_per_impression = $3::decimal(10,2), cost_per_click = $4::decimal(10,2),
-    ad_title = $5::varchar, ad_text = $6::varchar
+    ad_title = $5::varchar, ad_text = $6::varchar,
+    start_date = $7::int, end_date = $8::int
 WHERE
-    id = $7::uuid
+    id = $9::uuid
 RETURNING id, advertiser_id, impressions_limit, clicks_limit, cost_per_impression, cost_per_click, ad_title, ad_text, start_date, end_date
 `
 
@@ -256,6 +257,8 @@ type UpdateCampaignParams struct {
 	CostPerClick      pgtype.Numeric
 	AdTitle           string
 	AdText            string
+	StartDate         int32
+	EndDate           int32
 	CampaignID        uuid.UUID
 }
 
@@ -267,6 +270,8 @@ func (q *Queries) UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) 
 		arg.CostPerClick,
 		arg.AdTitle,
 		arg.AdText,
+		arg.StartDate,
+		arg.EndDate,
 		arg.CampaignID,
 	)
 	var i Campaign

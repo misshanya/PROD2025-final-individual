@@ -10,11 +10,13 @@ import (
 
 type CampaignService struct {
 	repo repository.CampaignRepository
+	timeRepo repository.TimeRepository
 }
 
-func NewCampaignService(repo repository.CampaignRepository) *CampaignService {
+func NewCampaignService(repo repository.CampaignRepository, timeRepo repository.TimeRepository) *CampaignService {
 	return &CampaignService{
 		repo: repo,
+		timeRepo: timeRepo,
 	}
 }
 
@@ -44,7 +46,11 @@ func (s *CampaignService) GetCampaignByID(ctx context.Context, campaignID uuid.U
 }
 
 func (s *CampaignService) UpdateCampaign(ctx context.Context, campaignID uuid.UUID, campaignUpdate domain.CampaignUpdateRequest) (*domain.Campaign, error) {
-	campaign, err := s.repo.UpdateCampaign(ctx, campaignID, campaignUpdate)
+	currentDate, err := s.timeRepo.GetCurrentDate(ctx)
+	if err != nil {
+		return nil, err
+	}
+	campaign, err := s.repo.UpdateCampaign(ctx, campaignID, campaignUpdate, *currentDate)
 	if err != nil {
 		return nil, err
 	}

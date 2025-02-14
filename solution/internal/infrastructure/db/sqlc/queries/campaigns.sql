@@ -42,7 +42,8 @@ UPDATE campaigns
 SET
     impressions_limit = @impressions_limit::bigint, clicks_limit = @clicks_limit::bigint,
     cost_per_impression = @cost_per_impression::decimal(10,2), cost_per_click = @cost_per_click::decimal(10,2),
-    ad_title = @ad_title::varchar, ad_text = @ad_text::varchar
+    ad_title = @ad_title::varchar, ad_text = @ad_text::varchar,
+    start_date = @start_date::int, end_date = @end_date::int
 WHERE
     id = @campaign_id::uuid
 RETURNING *;

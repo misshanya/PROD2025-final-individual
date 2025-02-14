@@ -56,19 +56,19 @@ func main() {
 	// Init advertiser handler
 	advertiserHandler := handlers.NewAdvertiserHandler(advertiserService)
 
-	// Init campaign repository and service
-	campaignRepo := repository.NewCampaignRepository(queries, conn)
-	campaignService := app.NewCampaignService(*campaignRepo)
-
-	// Init campaign handler
-	campaignHandler := handlers.NewCampaignHandler(campaignService)
-
 	// Init time repository and service
 	timeRepo := repository.NewTimeRepository(rdb)
 	timeService := app.NewTimeService(*timeRepo)
 
 	// Init time handler
 	timeHandler := handlers.NewTimeHandler(timeService)
+
+	// Init campaign repository and service
+	campaignRepo := repository.NewCampaignRepository(queries, conn)
+	campaignService := app.NewCampaignService(*campaignRepo, *timeRepo)
+
+	// Init campaign handler
+	campaignHandler := handlers.NewCampaignHandler(campaignService)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)

@@ -42,5 +42,7 @@ type CampaignUpdateRequest struct {
 	CostPerClick float64 `json:"cost_per_click"`
 	AdTitle string `json:"ad_title"`
 	AdText string `json:"ad_text"`
+	StartDate int32 `json:"start_date"`
+	EndDate int32 `json:"end_date"`
 	Targeting Targeting `json:"targeting"`
 }

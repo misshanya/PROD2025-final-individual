@@ -36,3 +36,17 @@ func (r *TimeRepository) SetCurrentDate(ctx context.Context, newDate int) error 
 	err = r.rdb.Set(ctx, "current_date", newDate, 0).Err()
 	return err
 }
+
+func (r *TimeRepository) GetCurrentDate(ctx context.Context) (*int, error) {
+	currentDateStr, err := r.rdb.Get(ctx, "current_date").Result()
+	if err != nil && err != redis.Nil {
+		return nil, err
+	} else if err == redis.Nil {
+		currentDateStr = "0"
+	}
+	currentDate, err := strconv.Atoi(currentDateStr)
+	if err != nil {
+		return nil, err
+	}
+	return &currentDate, nil
+}

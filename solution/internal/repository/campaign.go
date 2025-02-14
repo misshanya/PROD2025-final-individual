@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log"
 	"strconv"
 
 	"github.com/google/uuid"
@@ -222,12 +223,31 @@ func (r *CampaignRepository) GetCampaignByID(ctx context.Context, campaignID uui
 	}, nil
 }
 
-func (r *CampaignRepository) UpdateCampaign(ctx context.Context, campaignID uuid.UUID, campaignUpdate domain.CampaignUpdateRequest) (*domain.Campaign, error) {
+func (r *CampaignRepository) UpdateCampaign(ctx context.Context, campaignID uuid.UUID, campaignUpdate domain.CampaignUpdateRequest, currentDate int) (*domain.Campaign, error) {
 	// Convert cost per impression and cost per click to pgtype.Numeric
 	var costPerImpression pgtype.Numeric
 	var costPerClick pgtype.Numeric
 	costPerImpression.Scan(strconv.FormatFloat(campaignUpdate.CostPerImpression, 'f', -1, 64))
 	costPerClick.Scan(strconv.FormatFloat(campaignUpdate.CostPerClick, 'f', -1, 64))
+
+	var started bool
+	existingCampaignDB, err := r.queries.GetCampaignWithTargetingByID(ctx, campaignID)
+	started = existingCampaignDB.StartDate <= int32(currentDate)
+	log.Printf("updating campaign %s, started: %v", existingCampaignDB.ID, started)
+
+	var impressionsLimit, clicksLimit int64
+	var startDate, endDate int32
+	if started {
+		impressionsLimit = existingCampaignDB.ImpressionsLimit
+		clicksLimit = existingCampaignDB.ClicksLimit
+		startDate = existingCampaignDB.StartDate
+		endDate = existingCampaignDB.EndDate
+	} else {
+		impressionsLimit = campaignUpdate.ImpressionsLimit
+		clicksLimit = campaignUpdate.ClicksLimit
+		startDate = campaignUpdate.StartDate
+		endDate = campaignUpdate.EndDate
+	}
 
 	tx, err := r.dbConn.Begin(ctx)
 	if err != nil {
@@ -238,12 +258,14 @@ func (r *CampaignRepository) UpdateCampaign(ctx context.Context, campaignID uuid
 
 	campaignDB, err := qtx.UpdateCampaign(ctx, storage.UpdateCampaignParams{
 		CampaignID: campaignID,
-		ImpressionsLimit: campaignUpdate.ImpressionsLimit,
-		ClicksLimit: campaignUpdate.ClicksLimit,
+		ImpressionsLimit: impressionsLimit,
+		ClicksLimit: clicksLimit,
 		CostPerImpression: costPerImpression,
 		CostPerClick: costPerClick,
 		AdTitle: campaignUpdate.AdTitle,
 		AdText: campaignUpdate.AdText,
+		StartDate: startDate,
+		EndDate: endDate,
 	})
 	if err != nil {
 		return nil, err
