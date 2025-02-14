@@ -37,6 +37,26 @@ LIMIT $1 OFFSET $2;
 SELECT * FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
 WHERE campaigns.id = @campaign_id::uuid;
 
+-- name: UpdateCampaign :one
+UPDATE campaigns
+SET
+    impressions_limit = @impressions_limit::bigint, clicks_limit = @clicks_limit::bigint,
+    cost_per_impression = @cost_per_impression::decimal(10,2), cost_per_click = @cost_per_click::decimal(10,2),
+    ad_title = @ad_title::varchar, ad_text = @ad_text::varchar
+WHERE
+    id = @campaign_id::uuid
+RETURNING *;
+
+-- name: UpdateCampaignTargeting :one
+UPDATE campaigns_targeting
+SET
+    gender = COALESCE(sqlc.narg(gender)::varchar, NULL),
+    age_from = COALESCE(sqlc.narg(age_from)::int, NULL), age_to = COALESCE(sqlc.narg(age_to)::int, NULL),
+    location = COALESCE(sqlc.narg(location)::varchar, NULL)
+WHERE
+    campaign_id = @campaign_id::uuid
+RETURNING *;
+
 -- name: DeleteCampaignByID :exec
 DELETE FROM campaigns
 WHERE id = @campaign_id::uuid;

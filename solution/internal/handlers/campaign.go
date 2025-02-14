@@ -124,6 +124,38 @@ func (h *CampaignHandler) GetCampaignByID(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(campaign)
 }
 
+func (h *CampaignHandler) UpdateCampaign(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	_, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
+	if err != nil {
+		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
+		return
+	}
+
+	campaignID, err := uuid.Parse(chi.URLParam(r, "campaignId"))
+	if err != nil {
+		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var campaignUpdate domain.CampaignUpdateRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&campaignUpdate); err != nil {
+		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
+		return
+	}
+
+	newCampaign, err := h.service.UpdateCampaign(ctx, campaignID, campaignUpdate)
+	if err != nil {
+		log.Printf("[INTERNAL ERROR] failed to update campaign: %v", err)
+		http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(newCampaign)
+}
+
 func (h *CampaignHandler) DeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

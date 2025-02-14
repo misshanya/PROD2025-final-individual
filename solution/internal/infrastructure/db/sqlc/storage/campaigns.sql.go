@@ -237,3 +237,89 @@ func (q *Queries) GetCampaignsWithTargetingByAdvertiserID(ctx context.Context, a
 	}
 	return items, nil
 }
+
+const updateCampaign = `-- name: UpdateCampaign :one
+UPDATE campaigns
+SET
+    impressions_limit = $1::bigint, clicks_limit = $2::bigint,
+    cost_per_impression = $3::decimal(10,2), cost_per_click = $4::decimal(10,2),
+    ad_title = $5::varchar, ad_text = $6::varchar
+WHERE
+    id = $7::uuid
+RETURNING id, advertiser_id, impressions_limit, clicks_limit, cost_per_impression, cost_per_click, ad_title, ad_text, start_date, end_date
+`
+
+type UpdateCampaignParams struct {
+	ImpressionsLimit  int64
+	ClicksLimit       int64
+	CostPerImpression pgtype.Numeric
+	CostPerClick      pgtype.Numeric
+	AdTitle           string
+	AdText            string
+	CampaignID        uuid.UUID
+}
+
+func (q *Queries) UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (Campaign, error) {
+	row := q.db.QueryRow(ctx, updateCampaign,
+		arg.ImpressionsLimit,
+		arg.ClicksLimit,
+		arg.CostPerImpression,
+		arg.CostPerClick,
+		arg.AdTitle,
+		arg.AdText,
+		arg.CampaignID,
+	)
+	var i Campaign
+	err := row.Scan(
+		&i.ID,
+		&i.AdvertiserID,
+		&i.ImpressionsLimit,
+		&i.ClicksLimit,
+		&i.CostPerImpression,
+		&i.CostPerClick,
+		&i.AdTitle,
+		&i.AdText,
+		&i.StartDate,
+		&i.EndDate,
+	)
+	return i, err
+}
+
+const updateCampaignTargeting = `-- name: UpdateCampaignTargeting :one
+UPDATE campaigns_targeting
+SET
+    gender = COALESCE($1::varchar, NULL),
+    age_from = COALESCE($2::int, NULL), age_to = COALESCE($3::int, NULL),
+    location = COALESCE($4::varchar, NULL)
+WHERE
+    campaign_id = $5::uuid
+RETURNING id, campaign_id, gender, age_from, age_to, location
+`
+
+type UpdateCampaignTargetingParams struct {
+	Gender     pgtype.Text
+	AgeFrom    pgtype.Int4
+	AgeTo      pgtype.Int4
+	Location   pgtype.Text
+	CampaignID uuid.UUID
+}
+
+func (q *Queries) UpdateCampaignTargeting(ctx context.Context, arg UpdateCampaignTargetingParams) (CampaignsTargeting, error) {
+	row := q.db.QueryRow(ctx, updateCampaignTargeting,
+		arg.Gender,
+		arg.AgeFrom,
+		arg.AgeTo,
+		arg.Location,
+		arg.CampaignID,
+	)
+	var i CampaignsTargeting
+	err := row.Scan(
+		&i.ID,
+		&i.CampaignID,
+		&i.Gender,
+		&i.AgeFrom,
+		&i.AgeTo,
+		&i.Location,
+	)
+	return i, err
+}

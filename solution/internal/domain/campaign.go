@@ -34,3 +34,13 @@ type Targeting struct {
 	AgeTo *int32 `json:"age_to,omitempty"`
 	Location *string `json:"location,omitempty"`
 }
+
+type CampaignUpdateRequest struct {
+	ImpressionsLimit int64 `json:"impressions_limit"`
+	ClicksLimit int64 `json:"clicks_limit"`
+	CostPerImpression float64 `json:"cost_per_impression"`
+	CostPerClick float64 `json:"cost_per_click"`
+	AdTitle string `json:"ad_title"`
+	AdText string `json:"ad_text"`
+	Targeting Targeting `json:"targeting"`
+}

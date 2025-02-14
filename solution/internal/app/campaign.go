@@ -43,6 +43,14 @@ func (s *CampaignService) GetCampaignByID(ctx context.Context, campaignID uuid.U
 	return campaign, nil
 }
 
+func (s *CampaignService) UpdateCampaign(ctx context.Context, campaignID uuid.UUID, campaignUpdate domain.CampaignUpdateRequest) (*domain.Campaign, error) {
+	campaign, err := s.repo.UpdateCampaign(ctx, campaignID, campaignUpdate)
+	if err != nil {
+		return nil, err
+	}
+	return campaign, nil
+}
+
 func (s *CampaignService) DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error {
 	err := s.repo.DeleteCampaign(ctx, campaignID)
 	return err

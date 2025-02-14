@@ -65,6 +65,7 @@ func main() {
 	r.Post("/advertisers/{advertiserId}/campaigns", campaignHandler.CreateCampaign)
 	r.Get("/advertisers/{advertiserId}/campaigns", campaignHandler.GetCampaignsByAdvertiserID)
 	r.Get("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.GetCampaignByID)
+	r.Put("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.UpdateCampaign)
 	r.Delete("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.DeleteCampaign)
 
 	log.Printf("Starting server on %s", cfg.ServerAddress)
