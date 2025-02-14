@@ -7,6 +7,9 @@ services:
     environment:
       - SERVER_ADDRESS=:8080
       - DATABASE_URL=postgresql://lotty:somepassword@db:5432/proood
+      - REDIS_ADDRESS=redis:6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
     ports:
       - 8080:8080
 
@@ -40,7 +43,7 @@ services:
 
     networks:
       - prod-network
-          
+
   pgadmin:
     image: dpage/pgadmin4
     environment:
@@ -50,6 +53,12 @@ services:
       - 5050:80
     networks:
       - prod-network
+  
+  redis:
+    image: redis:latest
+    networks:
+      - prod-network
+    restart: unless-stopped
 
 networks:
   prod-network:
