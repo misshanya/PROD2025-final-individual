@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"
-	redisRepo "gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/repository/redis"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/app"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/config"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/handlers"
@@ -65,7 +64,7 @@ func main() {
 	campaignHandler := handlers.NewCampaignHandler(campaignService)
 
 	// Init time repository and service
-	timeRepo := redisRepo.NewTimeRepository(rdb)
+	timeRepo := repository.NewTimeRepository(rdb)
 	timeService := app.NewTimeService(*timeRepo)
 
 	// Init time handler

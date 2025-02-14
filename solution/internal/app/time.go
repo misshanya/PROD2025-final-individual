@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 
-	repository "gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/repository/redis"
+	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/repository"
 )
 
 type TimeService struct {
