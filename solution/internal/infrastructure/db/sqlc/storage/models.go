@@ -36,6 +36,18 @@ type CampaignsTargeting struct {
 	Location   pgtype.Text
 }
 
+type Click struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	ClientID   uuid.UUID
+}
+
+type Impression struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	ClientID   uuid.UUID
+}
+
 type MlScore struct {
 	ClientID     uuid.UUID
 	AdvertiserID uuid.UUID
