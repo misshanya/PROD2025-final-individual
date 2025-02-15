@@ -56,7 +56,7 @@ func (h *CampaignHandler) CreateCampaign(w http.ResponseWriter, r *http.Request)
 
 func (h *CampaignHandler) GetCampaignsByAdvertiserID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	advertiserID, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
 	if err != nil {
 		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)

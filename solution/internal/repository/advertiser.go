@@ -24,7 +24,7 @@ func (r *AdvertiserRepository) CreateUpdateAdvertisers(ctx context.Context, adve
 		_, err := r.queries.GetAdvertiserByID(ctx, advertiser.ID)
 		if err == pgx.ErrNoRows {
 			err = r.queries.CreateAdvertiser(ctx, storage.CreateAdvertiserParams{
-				ID: advertiser.ID,
+				ID:   advertiser.ID,
 				Name: advertiser.Name,
 			})
 			if err != nil {
@@ -32,7 +32,7 @@ func (r *AdvertiserRepository) CreateUpdateAdvertisers(ctx context.Context, adve
 			}
 		} else if err == nil {
 			err = r.queries.UpdateAdvertiser(ctx, storage.UpdateAdvertiserParams{
-				ID: advertiser.ID,
+				ID:   advertiser.ID,
 				Name: advertiser.Name,
 			})
 			if err != nil {
@@ -40,7 +40,7 @@ func (r *AdvertiserRepository) CreateUpdateAdvertisers(ctx context.Context, adve
 			}
 		}
 	}
-	
+
 	return advertisers, nil
 }
 
@@ -52,16 +52,16 @@ func (r *AdvertiserRepository) GetByID(ctx context.Context, id uuid.UUID) (*doma
 		return nil, err
 	}
 	return &domain.Advertiser{
-		ID: advertiser.ID,
+		ID:   advertiser.ID,
 		Name: advertiser.Name,
 	}, nil
 }
 
 func (r *AdvertiserRepository) CreateMLScore(ctx context.Context, score *domain.MLScore) error {
 	err := r.queries.CreateMLScore(ctx, storage.CreateMLScoreParams{
-		ClientID: score.ClientID,
+		ClientID:     score.ClientID,
 		AdvertiserID: score.AdvertiserID,
-		Score: score.Score,
+		Score:        score.Score,
 	})
 	if err != nil {
 		return err
@@ -71,14 +71,14 @@ func (r *AdvertiserRepository) CreateMLScore(ctx context.Context, score *domain.
 
 func (r *AdvertiserRepository) GetMLScore(ctx context.Context, clientID, advertiserID uuid.UUID) (*domain.MLScore, error) {
 	score, err := r.queries.GetMLScoreByIDs(ctx, storage.GetMLScoreByIDsParams{
-		ClientID: clientID,
+		ClientID:     clientID,
 		AdvertiserID: advertiserID,
 	})
 	if err == nil {
 		return &domain.MLScore{
-			ClientID: score.ClientID,
+			ClientID:     score.ClientID,
 			AdvertiserID: score.AdvertiserID,
-			Score: score.Score,
+			Score:        score.Score,
 		}, nil
 	} else if err == pgx.ErrNoRows {
 		return &domain.MLScore{}, pgx.ErrNoRows
@@ -88,8 +88,8 @@ func (r *AdvertiserRepository) GetMLScore(ctx context.Context, clientID, adverti
 
 func (r *AdvertiserRepository) UpdateMLScore(ctx context.Context, score *domain.MLScore) error {
 	err := r.queries.UpdateMLScore(ctx, storage.UpdateMLScoreParams{
-		Score: score.Score,
-		ClientID: score.ClientID,
+		Score:        score.Score,
+		ClientID:     score.ClientID,
 		AdvertiserID: score.AdvertiserID,
 	})
 	if err != nil {

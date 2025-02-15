@@ -25,7 +25,7 @@ func (s *AdvertiserService) CreateUpdateAdvertisers(ctx context.Context, adverti
 		return []*domain.Advertiser{}, err
 	}
 
-	return newAdvertisers, nil  
+	return newAdvertisers, nil
 }
 
 func (s *AdvertiserService) GetByID(ctx context.Context, id uuid.UUID) (*domain.Advertiser, error) {

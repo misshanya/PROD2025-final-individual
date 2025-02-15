@@ -9,13 +9,13 @@ import (
 )
 
 type CampaignService struct {
-	repo repository.CampaignRepository
+	repo     repository.CampaignRepository
 	timeRepo repository.TimeRepository
 }
 
 func NewCampaignService(repo repository.CampaignRepository, timeRepo repository.TimeRepository) *CampaignService {
 	return &CampaignService{
-		repo: repo,
+		repo:     repo,
 		timeRepo: timeRepo,
 	}
 }

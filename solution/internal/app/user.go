@@ -31,7 +31,7 @@ func (s *UserService) CreateUpdateUsers(ctx context.Context, users []*domain.Use
 		return []*domain.User{}, err
 	}
 
-	return newUsers, nil  
+	return newUsers, nil
 }
 
 func validateUser(user *domain.User) error {

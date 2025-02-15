@@ -12,16 +12,15 @@ import (
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/infrastructure/db/sqlc/storage"
 )
 
-
 type CampaignRepository struct {
 	queries *storage.Queries
-	dbConn *pgx.Conn
+	dbConn  *pgx.Conn
 }
 
 func NewCampaignRepository(queries *storage.Queries, dbConn *pgx.Conn) *CampaignRepository {
 	return &CampaignRepository{
 		queries: queries,
-		dbConn: dbConn,
+		dbConn:  dbConn,
 	}
 }
 
@@ -45,15 +44,15 @@ func (r *CampaignRepository) CreateCampaign(ctx context.Context, advertiserID uu
 	qtx := r.queries.WithTx(tx)
 
 	campaignDB, err := qtx.CreateCampaign(ctx, storage.CreateCampaignParams{
-		AdvertiserID: advertiserID,
-		ImpressionsLimit: campaignRequest.ImpressionsLimit,
-		ClicksLimit: campaignRequest.ClicksLimit,
+		AdvertiserID:      advertiserID,
+		ImpressionsLimit:  campaignRequest.ImpressionsLimit,
+		ClicksLimit:       campaignRequest.ClicksLimit,
 		CostPerImpression: costPerImpression,
-		CostPerClick: costPerClick,
-		AdTitle: campaignRequest.AdTitle,
-		AdText: campaignRequest.AdText,
-		StartDate: campaignRequest.StartDate,
-		EndDate: campaignRequest.EndDate,
+		CostPerClick:      costPerClick,
+		AdTitle:           campaignRequest.AdTitle,
+		AdText:            campaignRequest.AdText,
+		StartDate:         campaignRequest.StartDate,
+		EndDate:           campaignRequest.EndDate,
 	})
 	if err != nil {
 		return nil, err
@@ -97,25 +96,25 @@ func (r *CampaignRepository) CreateCampaign(ctx context.Context, advertiserID uu
 		targeting.Location = &targetingDB.Location.String
 	}
 	campaign := domain.Campaign{
-		ID: campaignDB.ID,
-		AdvertiserID: campaignDB.AdvertiserID,
-		ImpressionsLimit: campaignDB.ImpressionsLimit,
-		ClicksLimit: campaignDB.ClicksLimit,
+		ID:                campaignDB.ID,
+		AdvertiserID:      campaignDB.AdvertiserID,
+		ImpressionsLimit:  campaignDB.ImpressionsLimit,
+		ClicksLimit:       campaignDB.ClicksLimit,
 		CostPerImpression: campaignRequest.CostPerImpression,
-		CostPerClick: campaignRequest.CostPerClick,
-		AdTitle: campaignDB.AdTitle,
-		AdText: campaignDB.AdText,
-		StartDate: campaignDB.StartDate,
-		EndDate: campaignDB.EndDate,
-		Targeting: targeting,
+		CostPerClick:      campaignRequest.CostPerClick,
+		AdTitle:           campaignDB.AdTitle,
+		AdText:            campaignDB.AdText,
+		StartDate:         campaignDB.StartDate,
+		EndDate:           campaignDB.EndDate,
+		Targeting:         targeting,
 	}
 	return &campaign, nil
 }
 
 func (r *CampaignRepository) GetCampaignsByAdvertiserID(ctx context.Context, advertiserID uuid.UUID, size, offset int) ([]domain.Campaign, error) {
 	campaignsDB, err := r.queries.GetCampaignsWithTargetingByAdvertiserID(ctx, storage.GetCampaignsWithTargetingByAdvertiserIDParams{
-		Limit: int32(size),
-		Offset: int32(offset),
+		Limit:        int32(size),
+		Offset:       int32(offset),
 		AdvertiserID: advertiserID,
 	})
 	if err != nil {
@@ -140,7 +139,6 @@ func (r *CampaignRepository) GetCampaignsByAdvertiserID(ctx context.Context, adv
 		}
 		costPerClick = costPerClickFloatDB.Float64
 
-
 		targeting := domain.Targeting{}
 
 		if campaignDB.Gender.Valid {
@@ -156,17 +154,17 @@ func (r *CampaignRepository) GetCampaignsByAdvertiserID(ctx context.Context, adv
 			targeting.Location = &campaignDB.Location.String
 		}
 		campaigns[i] = domain.Campaign{
-			ID: campaignDB.ID,
-			AdvertiserID: advertiserID,
-			ImpressionsLimit: campaignDB.ImpressionsLimit,
-			ClicksLimit: campaignDB.ClicksLimit,
+			ID:                campaignDB.ID,
+			AdvertiserID:      advertiserID,
+			ImpressionsLimit:  campaignDB.ImpressionsLimit,
+			ClicksLimit:       campaignDB.ClicksLimit,
 			CostPerImpression: costPerImpression,
-			CostPerClick: costPerClick,
-			AdTitle: campaignDB.AdTitle,
-			AdText: campaignDB.AdText,
-			StartDate: campaignDB.StartDate,
-			EndDate: campaignDB.EndDate,
-			Targeting: targeting,
+			CostPerClick:      costPerClick,
+			AdTitle:           campaignDB.AdTitle,
+			AdText:            campaignDB.AdText,
+			StartDate:         campaignDB.StartDate,
+			EndDate:           campaignDB.EndDate,
+			Targeting:         targeting,
 		}
 	}
 
@@ -196,7 +194,6 @@ func (r *CampaignRepository) GetCampaignByID(ctx context.Context, campaignID uui
 	}
 	costPerClick = costPerClickFloatDB.Float64
 
-
 	targeting := domain.Targeting{}
 
 	if campaignDB.Gender.Valid {
@@ -213,17 +210,17 @@ func (r *CampaignRepository) GetCampaignByID(ctx context.Context, campaignID uui
 	}
 
 	return &domain.Campaign{
-		ID: campaignDB.ID,
-		AdvertiserID: campaignDB.AdvertiserID,
-		ImpressionsLimit: campaignDB.ImpressionsLimit,
-		ClicksLimit: campaignDB.ClicksLimit,
+		ID:                campaignDB.ID,
+		AdvertiserID:      campaignDB.AdvertiserID,
+		ImpressionsLimit:  campaignDB.ImpressionsLimit,
+		ClicksLimit:       campaignDB.ClicksLimit,
 		CostPerImpression: costPerImpression,
-		CostPerClick: costPerClick,
-		AdTitle: campaignDB.AdTitle,
-		AdText: campaignDB.AdText,
-		StartDate: campaignDB.StartDate,
-		EndDate: campaignDB.EndDate,
-		Targeting: targeting,
+		CostPerClick:      costPerClick,
+		AdTitle:           campaignDB.AdTitle,
+		AdText:            campaignDB.AdText,
+		StartDate:         campaignDB.StartDate,
+		EndDate:           campaignDB.EndDate,
+		Targeting:         targeting,
 	}, nil
 }
 
@@ -261,15 +258,15 @@ func (r *CampaignRepository) UpdateCampaign(ctx context.Context, campaignID uuid
 	qtx := r.queries.WithTx(tx)
 
 	campaignDB, err := qtx.UpdateCampaign(ctx, storage.UpdateCampaignParams{
-		CampaignID: campaignID,
-		ImpressionsLimit: impressionsLimit,
-		ClicksLimit: clicksLimit,
+		CampaignID:        campaignID,
+		ImpressionsLimit:  impressionsLimit,
+		ClicksLimit:       clicksLimit,
 		CostPerImpression: costPerImpression,
-		CostPerClick: costPerClick,
-		AdTitle: campaignUpdate.AdTitle,
-		AdText: campaignUpdate.AdText,
-		StartDate: startDate,
-		EndDate: endDate,
+		CostPerClick:      costPerClick,
+		AdTitle:           campaignUpdate.AdTitle,
+		AdText:            campaignUpdate.AdText,
+		StartDate:         startDate,
+		EndDate:           endDate,
 	})
 	if err != nil {
 		return nil, err
@@ -313,17 +310,17 @@ func (r *CampaignRepository) UpdateCampaign(ctx context.Context, campaignID uuid
 		targeting.Location = &targetingDB.Location.String
 	}
 	campaign := domain.Campaign{
-		ID: campaignDB.ID,
-		AdvertiserID: campaignDB.AdvertiserID,
-		ImpressionsLimit: campaignDB.ImpressionsLimit,
-		ClicksLimit: campaignDB.ClicksLimit,
+		ID:                campaignDB.ID,
+		AdvertiserID:      campaignDB.AdvertiserID,
+		ImpressionsLimit:  campaignDB.ImpressionsLimit,
+		ClicksLimit:       campaignDB.ClicksLimit,
 		CostPerImpression: campaignUpdate.CostPerImpression,
-		CostPerClick: campaignUpdate.CostPerClick,
-		AdTitle: campaignDB.AdTitle,
-		AdText: campaignDB.AdText,
-		StartDate: campaignDB.StartDate,
-		EndDate: campaignDB.EndDate,
-		Targeting: targeting,
+		CostPerClick:      campaignUpdate.CostPerClick,
+		AdTitle:           campaignDB.AdTitle,
+		AdText:            campaignDB.AdText,
+		StartDate:         campaignDB.StartDate,
+		EndDate:           campaignDB.EndDate,
+		Targeting:         targeting,
 	}
 	return &campaign, nil
 }

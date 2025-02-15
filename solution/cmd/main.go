@@ -33,9 +33,9 @@ func main() {
 
 	// Init redis connection
 	rdb := redis.NewClient(&redis.Options{
-		Addr: cfg.Redis.Address,
+		Addr:     cfg.Redis.Address,
 		Password: cfg.Redis.Password,
-		DB: cfg.Redis.DB,
+		DB:       cfg.Redis.DB,
 	})
 
 	if err := rdb.Ping(ctx).Err(); err != nil {

@@ -23,29 +23,29 @@ func (r *UserRepository) CreateUpdateUsers(ctx context.Context, users []*domain.
 	for _, user := range users {
 		if _, err := r.queries.GetUserByID(ctx, user.ID); err == pgx.ErrNoRows {
 			_, err := r.queries.CreateUser(ctx, storage.CreateUserParams{
-				ID: user.ID,
-				Login: user.Login,
-				Age: user.Age,
+				ID:       user.ID,
+				Login:    user.Login,
+				Age:      user.Age,
 				Location: user.Location,
-				Gender: user.Gender,
+				Gender:   user.Gender,
 			})
 			if err != nil {
 				return []*domain.User{}, err
 			}
 		} else if err == nil {
 			err := r.queries.UpdateUser(ctx, storage.UpdateUserParams{
-				ID: user.ID,
-				Login: user.Login,
-				Age: user.Age,
+				ID:       user.ID,
+				Login:    user.Login,
+				Age:      user.Age,
 				Location: user.Location,
-				Gender: user.Gender,
+				Gender:   user.Gender,
 			})
 			if err != nil {
 				return []*domain.User{}, err
 			}
 		}
 	}
-	
+
 	return users, nil
 }
 
@@ -57,10 +57,10 @@ func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Use
 		return nil, err
 	}
 	return &domain.User{
-		ID: user.ID,
-		Login: user.Login,
-		Age: user.Age,
+		ID:       user.ID,
+		Login:    user.Login,
+		Age:      user.Age,
 		Location: user.Location,
-		Gender: user.Gender,
+		Gender:   user.Gender,
 	}, nil
 }

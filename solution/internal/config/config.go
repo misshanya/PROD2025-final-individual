@@ -11,13 +11,13 @@ import (
 type Config struct {
 	DatabaseURL   string
 	ServerAddress string
-	Redis RedisConfig
+	Redis         RedisConfig
 }
 
 type RedisConfig struct {
-	Address string
+	Address  string
 	Password string
-	DB int
+	DB       int
 }
 
 func NewConfig() *Config {
@@ -62,9 +62,9 @@ func NewConfig() *Config {
 		DatabaseURL:   dbURL,
 		ServerAddress: serverAddress,
 		Redis: RedisConfig{
-			Address: redisAddr,
+			Address:  redisAddr,
 			Password: redisPassword,
-			DB: redisDB,
+			DB:       redisDB,
 		},
 	}
 }
