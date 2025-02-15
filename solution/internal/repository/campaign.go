@@ -25,12 +25,16 @@ func NewCampaignRepository(queries *storage.Queries, dbConn *pgx.Conn) *Campaign
 	}
 }
 
-func (r *CampaignRepository) CreateCampaign(ctx context.Context, advertiserID uuid.UUID, campaignRequest *domain.CampaignRequest) (*domain.Campaign, error) {
+func (r *CampaignRepository) CreateCampaign(ctx context.Context, advertiserID uuid.UUID, campaignRequest *domain.CampaignRequest, currentDate int) (*domain.Campaign, error) {
 	// Convert cost per impression and cost per click to pgtype.Numeric
 	var costPerImpression pgtype.Numeric
 	var costPerClick pgtype.Numeric
 	costPerImpression.Scan(strconv.FormatFloat(campaignRequest.CostPerImpression, 'f', -1, 64))
 	costPerClick.Scan(strconv.FormatFloat(campaignRequest.CostPerClick, 'f', -1, 64))
+
+	if campaignRequest.StartDate < int32(currentDate) || campaignRequest.EndDate < int32(currentDate) {
+		return nil, domain.ErrBadRequest
+	}
 
 	// Create campaign and targeting in transaction
 	tx, err := r.dbConn.Begin(ctx)

@@ -40,8 +40,13 @@ func (h *CampaignHandler) CreateCampaign(w http.ResponseWriter, r *http.Request)
 
 	campaign, err := h.service.CreateCampaign(ctx, advertiserID, campaignRequest)
 	if err != nil {
-		log.Printf("[INTERNAL ERROR] failed to create campaign: %v", err)
-		http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+		switch err {
+		case domain.ErrBadRequest:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		default:
+			log.Printf("[INTERNAL ERROR] failed to create campaign: %v", err)
+			http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 

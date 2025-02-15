@@ -21,7 +21,11 @@ func NewCampaignService(repo repository.CampaignRepository, timeRepo repository.
 }
 
 func (s *CampaignService) CreateCampaign(ctx context.Context, advertiserID uuid.UUID, campaignRequest *domain.CampaignRequest) (*domain.Campaign, error) {
-	campaign, err := s.repo.CreateCampaign(ctx, advertiserID, campaignRequest)
+	currentDate, err := s.timeRepo.GetCurrentDate(ctx)
+	if err != nil {
+		return nil, err
+	}
+	campaign, err := s.repo.CreateCampaign(ctx, advertiserID, campaignRequest, *currentDate)
 	if err != nil {
 		return nil, err
 	}
