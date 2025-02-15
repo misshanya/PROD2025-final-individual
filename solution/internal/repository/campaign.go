@@ -32,7 +32,7 @@ func (r *CampaignRepository) CreateCampaign(ctx context.Context, advertiserID uu
 	costPerImpression.Scan(strconv.FormatFloat(campaignRequest.CostPerImpression, 'f', -1, 64))
 	costPerClick.Scan(strconv.FormatFloat(campaignRequest.CostPerClick, 'f', -1, 64))
 
-	if campaignRequest.StartDate < int32(currentDate) || campaignRequest.EndDate < int32(currentDate) {
+	if campaignRequest.StartDate < int32(currentDate) || campaignRequest.EndDate < int32(currentDate) || campaignRequest.EndDate < campaignRequest.StartDate {
 		return nil, domain.ErrBadRequest
 	}
 
