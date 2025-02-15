@@ -15,7 +15,7 @@ const createUser = `-- name: CreateUser :one
 INSERT INTO users (
     id, login, age, location, gender
 ) VALUES (
-    $1::uuid, $2::varchar(50),
+    $1::uuid, $2::varchar,
     $3::integer, $4::varchar, $5::varchar(7)
 )
 RETURNING id, login, age, location, gender
@@ -72,7 +72,7 @@ SET
 login = $1::varchar,
 age = $2::int,
 location = $3::varchar,
-gender = $4::varchar(7)
+gender = $4::varchar
 WHERE id = $5::uuid
 `
 

@@ -2,7 +2,7 @@
 INSERT INTO users (
     id, login, age, location, gender
 ) VALUES (
-    @id::uuid, @login::varchar(50),
+    @id::uuid, @login::varchar,
     @age::integer, @location::varchar, @gender::varchar(7)
 )
 RETURNING *;
@@ -17,5 +17,5 @@ SET
 login = @login::varchar,
 age = @age::int,
 location = @location::varchar,
-gender = @gender::varchar(7)
+gender = @gender::varchar
 WHERE id = @id::uuid;
