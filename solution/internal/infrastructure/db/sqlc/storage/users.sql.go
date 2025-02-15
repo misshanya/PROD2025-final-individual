@@ -16,7 +16,7 @@ INSERT INTO users (
     id, login, age, location, gender
 ) VALUES (
     $1::uuid, $2::varchar,
-    $3::integer, $4::varchar, $5::varchar(7)
+    $3::integer, $4::varchar, $5::varchar
 )
 RETURNING id, login, age, location, gender
 `
