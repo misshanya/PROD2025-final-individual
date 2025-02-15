@@ -70,6 +70,13 @@ func main() {
 	// Init campaign handler
 	campaignHandler := handlers.NewCampaignHandler(campaignService)
 
+	// Init ads repository and service
+	adsRepo := repository.NewAdsRepository(queries)
+	adsService := app.NewAdsService(*adsRepo)
+
+	// Init ads handler
+	adsHandler := handlers.NewAdsHandler(adsService)
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
@@ -86,6 +93,8 @@ func main() {
 	r.Get("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.GetCampaignByID)
 	r.Put("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.UpdateCampaign)
 	r.Delete("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.DeleteCampaign)
+
+	r.Post("/ads/{adId}/click", adsHandler.Click)
 
 	r.Post("/time/advance", timeHandler.SetCurrentDate)
 

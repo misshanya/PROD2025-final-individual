@@ -31,3 +31,22 @@ func (q *Queries) CreateClick(ctx context.Context, arg CreateClickParams) (Click
 	err := row.Scan(&i.ID, &i.CampaignID, &i.ClientID)
 	return i, err
 }
+
+const isClicked = `-- name: IsClicked :one
+SELECT 1 FROM clicks
+WHERE
+    campaign_id = $1::uuid AND
+    client_id = $2::uuid
+`
+
+type IsClickedParams struct {
+	CampaignID uuid.UUID
+	ClientID   uuid.UUID
+}
+
+func (q *Queries) IsClicked(ctx context.Context, arg IsClickedParams) (int32, error) {
+	row := q.db.QueryRow(ctx, isClicked, arg.CampaignID, arg.ClientID)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
+}
