@@ -98,6 +98,8 @@ func main() {
 	r.Put("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.UpdateCampaign)
 	r.Delete("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.DeleteCampaign)
 
+	r.Post("/advertisers/campaigns/generate", campaignHandler.GenerateAdText)
+
 	r.Post("/ads/{adId}/click", adsHandler.Click)
 
 	r.Post("/time/advance", timeHandler.SetCurrentDate)

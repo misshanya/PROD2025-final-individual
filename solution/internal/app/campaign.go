@@ -86,3 +86,8 @@ func (s *CampaignService) DeleteCampaign(ctx context.Context, campaignID uuid.UU
 	err := s.repo.DeleteCampaign(ctx, campaignID)
 	return err
 }
+
+func (s *CampaignService) GenerateAdText(ctx context.Context, advertiserName string, adTitle string) (string, error) {
+	adText, err := s.openAIService.GenerateAdText(ctx, advertiserName, adTitle)
+	return adText, err
+}

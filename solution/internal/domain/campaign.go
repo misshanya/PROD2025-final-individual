@@ -46,3 +46,12 @@ type CampaignUpdateRequest struct {
 	EndDate           int32     `json:"end_date"`
 	Targeting         Targeting `json:"targeting"`
 }
+
+type GenerateAdTextRequest struct {
+	AdvertiserName string `json:"advertiser_name"`
+	AdTitle        string `json:"ad_title"`
+}
+
+type GenerateAdTextResponse struct {
+	AdText string `json:"ad_text"`
+}

@@ -8,6 +8,7 @@ import (
 
 type MLService interface {
 	ValidateAdText(ctx context.Context, text string) (bool, error)
+	GenerateAdText(ctx context.Context, advertiserName, adTitle string) (string, error)
 }
 
 type MLScore struct {

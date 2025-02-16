@@ -190,3 +190,27 @@ func (h *CampaignHandler) DeleteCampaign(w http.ResponseWriter, r *http.Request)
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (h *CampaignHandler) GenerateAdText(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var GenerateAdTextRequest *domain.GenerateAdTextRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&GenerateAdTextRequest); err != nil {
+		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
+		return
+	}
+
+	adText, err := h.service.GenerateAdText(ctx, GenerateAdTextRequest.AdvertiserName, GenerateAdTextRequest.AdTitle)
+	if err != nil {
+		log.Printf("[INTERNAL ERROR] failed to generate ad text: %v", err)
+		http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := domain.GenerateAdTextResponse{
+		AdText: adText,
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
