@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   backend:
@@ -10,6 +10,7 @@ services:
       - REDIS_ADDRESS=redis:6379
       - REDIS_PASSWORD=
       - REDIS_DB=0
+      - OPENAI_BASE_URL=http://ollama-host:11434/v1/
     ports:
       - 8080:8080
 
@@ -21,7 +22,7 @@ services:
 
     networks:
       - prod-network
-  
+
   db:
     image: postgres:latest
 
@@ -29,16 +30,16 @@ services:
       - POSTGRES_USER=lotty
       - POSTGRES_PASSWORD=somepassword
       - POSTGRES_DB=proood
-    
+
     volumes:
       - db_data:/var/lib/postgresql/data
-    
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U lotty -d proood"]
       interval: 5s
       timeout: 5s
       retries: 5
-    
+
     restart: unless-stopped
 
     networks:
@@ -53,7 +54,7 @@ services:
       - 5050:80
     networks:
       - prod-network
-  
+
   redis:
     image: redis:latest
     networks:

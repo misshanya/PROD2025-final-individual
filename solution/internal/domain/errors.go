@@ -17,4 +17,5 @@ var (
 	ErrAdvertiserNotFound      = errors.New("advertiser not found")
 
 	ErrNewDateLowerThanCurrent = errors.New("new date must be bigger than current")
+	ErrModerationNotPassed     = errors.New("moderation not passed")
 )

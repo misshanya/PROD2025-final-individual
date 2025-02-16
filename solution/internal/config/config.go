@@ -12,12 +12,18 @@ type Config struct {
 	DatabaseURL   string
 	ServerAddress string
 	Redis         RedisConfig
+	OpenAI        OpenAIConfig
 }
 
 type RedisConfig struct {
 	Address  string
 	Password string
 	DB       int
+}
+
+type OpenAIConfig struct {
+	BaseURL string
+	ApiKey  string
 }
 
 func NewConfig() *Config {
@@ -58,6 +64,16 @@ func NewConfig() *Config {
 		}
 	}
 
+	openAIBaseURL := os.Getenv("OPENAI_BASE_URL")
+	if openAIBaseURL == "" {
+		log.Fatalln("missing OPENAI_BASE_URL")
+	}
+
+	openAIApiKey := os.Getenv("OPENAI_API_KEY")
+	if openAIApiKey == "" {
+		log.Println("[WARNING] OpenAI api key unset")
+	}
+
 	return &Config{
 		DatabaseURL:   dbURL,
 		ServerAddress: serverAddress,
@@ -65,6 +81,10 @@ func NewConfig() *Config {
 			Address:  redisAddr,
 			Password: redisPassword,
 			DB:       redisDB,
+		},
+		OpenAI: OpenAIConfig{
+			BaseURL: openAIBaseURL,
+			ApiKey:  openAIApiKey,
 		},
 	}
 }

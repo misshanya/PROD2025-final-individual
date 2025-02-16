@@ -9,18 +9,27 @@ import (
 )
 
 type CampaignService struct {
-	repo     repository.CampaignRepository
-	timeRepo repository.TimeRepository
+	repo          repository.CampaignRepository
+	timeRepo      repository.TimeRepository
+	openAIService domain.MLService
 }
 
-func NewCampaignService(repo repository.CampaignRepository, timeRepo repository.TimeRepository) *CampaignService {
+func NewCampaignService(repo repository.CampaignRepository, timeRepo repository.TimeRepository, openAIService domain.MLService) *CampaignService {
 	return &CampaignService{
-		repo:     repo,
-		timeRepo: timeRepo,
+		repo:          repo,
+		timeRepo:      timeRepo,
+		openAIService: openAIService,
 	}
 }
 
 func (s *CampaignService) CreateCampaign(ctx context.Context, advertiserID uuid.UUID, campaignRequest *domain.CampaignRequest) (*domain.Campaign, error) {
+	isAllowed, err := s.openAIService.ValidateAdText(ctx, campaignRequest.AdText)
+	if err != nil {
+		return nil, err
+	}
+	if !isAllowed {
+		return nil, domain.ErrModerationNotPassed
+	}
 	currentDate, err := s.timeRepo.GetCurrentDate(ctx)
 	if err != nil {
 		return nil, err

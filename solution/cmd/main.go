@@ -13,6 +13,7 @@ import (
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/config"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/handlers"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/infrastructure/db/sqlc/storage"
+	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/infrastructure/ml"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/repository"
 )
 
@@ -42,6 +43,9 @@ func main() {
 		log.Fatalf("failed to ping redis: %v", err)
 	}
 
+	// Init OpenAI service
+	openAIService := ml.NewOpenAIService(cfg.OpenAI.BaseURL, cfg.OpenAI.ApiKey)
+
 	// Init user repository and service
 	userRepo := repository.NewUserRepository(queries)
 	UserService := app.NewUserService(*userRepo)
@@ -65,7 +69,7 @@ func main() {
 
 	// Init campaign repository and service
 	campaignRepo := repository.NewCampaignRepository(queries, conn)
-	campaignService := app.NewCampaignService(*campaignRepo, *timeRepo)
+	campaignService := app.NewCampaignService(*campaignRepo, *timeRepo, openAIService)
 
 	// Init campaign handler
 	campaignHandler := handlers.NewCampaignHandler(campaignService)
