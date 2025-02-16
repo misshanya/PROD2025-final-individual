@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/domain"
@@ -23,7 +24,9 @@ func NewCampaignService(repo repository.CampaignRepository, timeRepo repository.
 }
 
 func (s *CampaignService) CreateCampaign(ctx context.Context, advertiserID uuid.UUID, campaignRequest *domain.CampaignRequest) (*domain.Campaign, error) {
-	isAllowed, err := s.openAIService.ValidateAdText(ctx, campaignRequest.AdText)
+	// Combine ad title and ad text into one string to check both at once
+	allText := fmt.Sprintf("Название: %s; Описание: %s", campaignRequest.AdTitle, campaignRequest.AdText)
+	isAllowed, err := s.openAIService.ValidateAdText(ctx, allText)
 	if err != nil {
 		return nil, err
 	}
