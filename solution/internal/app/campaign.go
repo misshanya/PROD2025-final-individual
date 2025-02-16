@@ -62,6 +62,15 @@ func (s *CampaignService) GetCampaignByID(ctx context.Context, campaignID uuid.U
 }
 
 func (s *CampaignService) UpdateCampaign(ctx context.Context, campaignID uuid.UUID, campaignUpdate domain.CampaignUpdateRequest) (*domain.Campaign, error) {
+	// Combine ad title and ad text into one string to check both at once
+	allText := fmt.Sprintf("Название: %s; Описание: %s", campaignUpdate.AdTitle, campaignUpdate.AdText)
+	isAllowed, err := s.openAIService.ValidateAdText(ctx, allText)
+	if err != nil {
+		return nil, err
+	}
+	if !isAllowed {
+		return nil, domain.ErrModerationNotPassed
+	}
 	currentDate, err := s.timeRepo.GetCurrentDate(ctx)
 	if err != nil {
 		return nil, err

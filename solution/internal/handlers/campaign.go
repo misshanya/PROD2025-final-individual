@@ -153,8 +153,13 @@ func (h *CampaignHandler) UpdateCampaign(w http.ResponseWriter, r *http.Request)
 
 	newCampaign, err := h.service.UpdateCampaign(ctx, campaignID, campaignUpdate)
 	if err != nil {
-		log.Printf("[INTERNAL ERROR] failed to update campaign: %v", err)
-		http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+		switch err {
+		case domain.ErrModerationNotPassed:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		default:
+			log.Printf("[INTERNAL ERROR] failed to update campaign: %v", err)
+			http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 
