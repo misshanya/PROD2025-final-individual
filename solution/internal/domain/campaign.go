@@ -55,3 +55,7 @@ type GenerateAdTextRequest struct {
 type GenerateAdTextResponse struct {
 	AdText string `json:"ad_text"`
 }
+
+type SwitchModerationResponse struct {
+	IsModerated bool `json:"is_moderated"`
+}

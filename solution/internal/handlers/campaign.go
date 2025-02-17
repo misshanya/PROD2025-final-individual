@@ -214,3 +214,20 @@ func (h *CampaignHandler) GenerateAdText(w http.ResponseWriter, r *http.Request)
 
 	json.NewEncoder(w).Encode(response)
 }
+
+func (h *CampaignHandler) SwitchModeration(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	newIsModerated, err := h.service.SwitchModeration(ctx)
+	if err != nil {
+		log.Printf("[INTERNAL ERROR] failed to switch moderation: %v", err)
+		http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := domain.SwitchModerationResponse{
+		IsModerated: newIsModerated,
+	}
+
+	json.NewEncoder(w).Encode(response)
+}

@@ -3,6 +3,8 @@ package ml
 import (
 	"context"
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -26,7 +28,7 @@ func (s *OpenAIService) ValidateAdText(ctx context.Context, text string) (bool, 
 		ctx,
 		openai.ChatCompletionNewParams{
 			Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-				openai.SystemMessage("Ты - модератор. Ты должен проверять тексты рекламных кампаний на что-то неприличное (маты и оскорбления). В итоге твой ответ должен быть только + (если текст проходит модерацию) или - (если текст не проходит модерацию)"),
+				openai.SystemMessage("Ты - модератор. Ты должен проверять тексты рекламных кампаний на что-то неприличное (маты и оскорбления). В итоге твой ответ должен быть только + (если текст проходит модерацию) или - (если текст не проходит модерацию) и критерий запрета через двоеточие (Например, -:Критерий)"),
 				openai.UserMessage(text),
 			}),
 			Model: openai.F("qwen2.5:3b"),
@@ -37,9 +39,11 @@ func (s *OpenAIService) ValidateAdText(ctx context.Context, text string) (bool, 
 	}
 
 	var response bool
-	if res.Choices[0].Message.Content == "+" {
+	if strings.Split(res.Choices[0].Message.Content, ":")[0] == "+" {
 		response = true
 	}
+
+	log.Println(res.Choices[0].Message.Content)
 
 	return response, nil
 }

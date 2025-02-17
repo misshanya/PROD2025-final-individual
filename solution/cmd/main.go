@@ -46,6 +46,9 @@ func main() {
 	// Init OpenAI service
 	openAIService := ml.NewOpenAIService(cfg.OpenAI.BaseURL, cfg.OpenAI.ApiKey)
 
+	// Init ML repository
+	mlRepo := repository.NewMLRepository(rdb)
+
 	// Init user repository and service
 	userRepo := repository.NewUserRepository(queries)
 	UserService := app.NewUserService(*userRepo)
@@ -69,7 +72,7 @@ func main() {
 
 	// Init campaign repository and service
 	campaignRepo := repository.NewCampaignRepository(queries, conn)
-	campaignService := app.NewCampaignService(*campaignRepo, *timeRepo, openAIService)
+	campaignService := app.NewCampaignService(*campaignRepo, *timeRepo, openAIService, *mlRepo)
 
 	// Init campaign handler
 	campaignHandler := handlers.NewCampaignHandler(campaignService)
@@ -99,6 +102,8 @@ func main() {
 	r.Delete("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.DeleteCampaign)
 
 	r.Post("/advertisers/campaigns/generate", campaignHandler.GenerateAdText)
+
+	r.Patch("/advertisers/campaigns/moderation", campaignHandler.SwitchModeration)
 
 	r.Post("/ads/{adId}/click", adsHandler.Click)
 

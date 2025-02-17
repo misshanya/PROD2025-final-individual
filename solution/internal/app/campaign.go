@@ -13,25 +13,33 @@ type CampaignService struct {
 	repo          repository.CampaignRepository
 	timeRepo      repository.TimeRepository
 	openAIService domain.MLService
+	mlRepository  repository.MLRepository
 }
 
-func NewCampaignService(repo repository.CampaignRepository, timeRepo repository.TimeRepository, openAIService domain.MLService) *CampaignService {
+func NewCampaignService(repo repository.CampaignRepository, timeRepo repository.TimeRepository, openAIService domain.MLService, mlRepository repository.MLRepository) *CampaignService {
 	return &CampaignService{
 		repo:          repo,
 		timeRepo:      timeRepo,
 		openAIService: openAIService,
+		mlRepository:  mlRepository,
 	}
 }
 
 func (s *CampaignService) CreateCampaign(ctx context.Context, advertiserID uuid.UUID, campaignRequest *domain.CampaignRequest) (*domain.Campaign, error) {
-	// Combine ad title and ad text into one string to check both at once
-	allText := fmt.Sprintf("Название: %s; Описание: %s", campaignRequest.AdTitle, campaignRequest.AdText)
-	isAllowed, err := s.openAIService.ValidateAdText(ctx, allText)
+	isModerated, err := s.checkModeration(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if !isAllowed {
-		return nil, domain.ErrModerationNotPassed
+	if isModerated {
+		// Combine ad title and ad text into one string to check both at once
+		allText := fmt.Sprintf("Название: %s; Описание: %s", campaignRequest.AdTitle, campaignRequest.AdText)
+		isAllowed, err := s.openAIService.ValidateAdText(ctx, allText)
+		if err != nil {
+			return nil, err
+		}
+		if !isAllowed {
+			return nil, domain.ErrModerationNotPassed
+		}
 	}
 	currentDate, err := s.timeRepo.GetCurrentDate(ctx)
 	if err != nil {
@@ -62,14 +70,20 @@ func (s *CampaignService) GetCampaignByID(ctx context.Context, campaignID uuid.U
 }
 
 func (s *CampaignService) UpdateCampaign(ctx context.Context, campaignID uuid.UUID, campaignUpdate domain.CampaignUpdateRequest) (*domain.Campaign, error) {
-	// Combine ad title and ad text into one string to check both at once
-	allText := fmt.Sprintf("Название: %s; Описание: %s", campaignUpdate.AdTitle, campaignUpdate.AdText)
-	isAllowed, err := s.openAIService.ValidateAdText(ctx, allText)
+	isModerated, err := s.checkModeration(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if !isAllowed {
-		return nil, domain.ErrModerationNotPassed
+	if isModerated {
+		// Combine ad title and ad text into one string to check both at once
+		allText := fmt.Sprintf("Название: %s; Описание: %s", campaignUpdate.AdTitle, campaignUpdate.AdText)
+		isAllowed, err := s.openAIService.ValidateAdText(ctx, allText)
+		if err != nil {
+			return nil, err
+		}
+		if !isAllowed {
+			return nil, domain.ErrModerationNotPassed
+		}
 	}
 	currentDate, err := s.timeRepo.GetCurrentDate(ctx)
 	if err != nil {
@@ -90,4 +104,12 @@ func (s *CampaignService) DeleteCampaign(ctx context.Context, campaignID uuid.UU
 func (s *CampaignService) GenerateAdText(ctx context.Context, advertiserName string, adTitle string) (string, error) {
 	adText, err := s.openAIService.GenerateAdText(ctx, advertiserName, adTitle)
 	return adText, err
+}
+
+func (s *CampaignService) SwitchModeration(ctx context.Context) (bool, error) {
+	return s.mlRepository.SwitchModeration(ctx)
+}
+
+func (s *CampaignService) checkModeration(ctx context.Context) (bool, error) {
+	return s.mlRepository.CheckModeration(ctx)
 }
