@@ -62,6 +62,13 @@ definitions:
       current_date:
         type: integer
     type: object
+  domain.GenerateAdTextRequest:
+    properties:
+      ad_title:
+        type: string
+      advertiser_name:
+        type: string
+    type: object
   domain.GenerateAdTextResponse:
     properties:
       ad_text:
@@ -332,6 +339,13 @@ paths:
       - application/json
       description: Генерирует текст рекламы на основе имени рекламодателя и названии
         рекламы
+      parameters:
+      - description: Информация для генерации текста
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/domain.GenerateAdTextRequest'
       produces:
       - application/json
       responses:

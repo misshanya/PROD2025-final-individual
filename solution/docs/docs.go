@@ -129,6 +129,17 @@ const docTemplate = `{
                     "Campaigns"
                 ],
                 "summary": "Генерация текста рекламы",
+                "parameters": [
+                    {
+                        "description": "Информация для генерации текста",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.GenerateAdTextRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -686,6 +697,17 @@ const docTemplate = `{
             "properties": {
                 "current_date": {
                     "type": "integer"
+                }
+            }
+        },
+        "domain.GenerateAdTextRequest": {
+            "type": "object",
+            "properties": {
+                "ad_title": {
+                    "type": "string"
+                },
+                "advertiser_name": {
+                    "type": "string"
                 }
             }
         },

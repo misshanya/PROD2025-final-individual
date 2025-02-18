@@ -254,11 +254,10 @@ func (h *CampaignHandler) DeleteCampaign(w http.ResponseWriter, r *http.Request)
 //	@Description	Генерирует текст рекламы на основе имени рекламодателя и названии рекламы
 //	@Tags			Campaigns
 //	@Accept			json
+//	@Param			data	body	domain.GenerateAdTextRequest	true	"Информация для генерации текста"
 //	@Produce		json
 //	@Success		200	{object}	domain.GenerateAdTextResponse
-//
 //	@Failure		400	{string}	string	"Bad request"
-//
 //	@Failure		500	{string}	string	"Internal Server Error"
 //	@Router			/advertisers/campaigns/generate [post]
 func (h *CampaignHandler) GenerateAdText(w http.ResponseWriter, r *http.Request) {
