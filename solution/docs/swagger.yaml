@@ -112,6 +112,13 @@ definitions:
       login:
         type: string
     type: object
+  handlers.ErrorResponse:
+    properties:
+      details:
+        type: string
+      error:
+        type: string
+    type: object
 info:
   contact: {}
   description: API для управления данными клиентов, рекламодателей, рекламными кампаниями,
@@ -142,13 +149,17 @@ paths:
         "204":
           description: No Content
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Фиксация перехода по рекламному объявлению
       tags:
       - Ads
@@ -163,17 +174,17 @@ paths:
           schema:
             $ref: '#/definitions/domain.Advertiser'
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "404":
-          description: Not found
+          description: Not Found
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Получение рекламодателя по ID
       tags:
       - Advertisers
@@ -196,13 +207,13 @@ paths:
               $ref: '#/definitions/domain.Campaign'
             type: array
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Получение кампаний рекламодателя
       tags:
       - Campaigns
@@ -230,13 +241,13 @@ paths:
           schema:
             $ref: '#/definitions/domain.Campaign'
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Создание кампании
       tags:
       - Campaigns
@@ -249,7 +260,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Удаление рекламной кампании
       tags:
       - Campaigns
@@ -263,17 +274,17 @@ paths:
           schema:
             $ref: '#/definitions/domain.Campaign'
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "404":
-          description: Not found
+          description: Not Found
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Получение кампании
       tags:
       - Campaigns
@@ -289,13 +300,13 @@ paths:
           schema:
             $ref: '#/definitions/domain.Campaign'
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Обновление кампании
       tags:
       - Campaigns
@@ -323,13 +334,13 @@ paths:
               $ref: '#/definitions/domain.Advertiser'
             type: array
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Создание/обновление рекламодателей
       tags:
       - Advertisers
@@ -354,13 +365,13 @@ paths:
           schema:
             $ref: '#/definitions/domain.GenerateAdTextResponse'
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Генерация текста рекламы
       tags:
       - Campaigns
@@ -377,7 +388,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Переключение модерации
       tags:
       - Campaigns
@@ -400,17 +411,17 @@ paths:
               $ref: '#/definitions/domain.User'
             type: array
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "404":
-          description: Client not found
+          description: Not Found
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Получение клиента по ID
       tags:
       - Clients
@@ -438,13 +449,13 @@ paths:
               $ref: '#/definitions/domain.User'
             type: array
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Массовое создание/обновление клиентов
       tags:
       - Clients
@@ -465,14 +476,16 @@ paths:
       responses:
         "200":
           description: OK
-        "400":
-          description: Bad request
           schema:
-            type: string
+            $ref: '#/definitions/domain.MLScore'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Добавление или обновление ML скора
       tags:
       - Advertisers
@@ -496,13 +509,13 @@ paths:
           schema:
             $ref: '#/definitions/domain.CurrentDate'
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
+            $ref: '#/definitions/handlers.ErrorResponse'
       summary: Установка текущей даты
       tags:
       - Time

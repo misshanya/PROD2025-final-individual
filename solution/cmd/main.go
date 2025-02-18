@@ -85,7 +85,7 @@ func main() {
 
 	// Init ads repository and service
 	adsRepo := repository.NewAdsRepository(queries)
-	adsService := app.NewAdsService(*adsRepo)
+	adsService := app.NewAdsService(*adsRepo, *userRepo, *campaignRepo)
 
 	// Init ads handler
 	adsHandler := handlers.NewAdsHandler(adsService)

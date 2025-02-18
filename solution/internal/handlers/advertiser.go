@@ -30,8 +30,8 @@ func NewAdvertiserHandler(service *app.AdvertiserService) *AdvertiserHandler {
 //	@Param			CreateAdvertisers	body	[]domain.Advertiser	true	"CampaignRequest"
 //	@Produce		json
 //	@Success		201	{object}	[]domain.Advertiser
-//	@Failure		400	{string}	BadRequest	"Bad request"
-//	@Failure		500	{string}	string		"Internal Server Error"
+//	@Failure		400	{object}	ErrorResponse
+//	@Failure		500	{object} ErrorResponse
 //	@Router			/advertisers/bulk [post]
 func (h *AdvertiserHandler) CreateAdvertisers(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -39,21 +39,14 @@ func (h *AdvertiserHandler) CreateAdvertisers(w http.ResponseWriter, r *http.Req
 	var advertisers []*domain.Advertiser
 
 	if err := json.NewDecoder(r.Body).Decode(&advertisers); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		WriteError(w, http.StatusBadRequest, "Некорректный запрос", err.Error())
 		return
 	}
 
 	newAdvertisers, err := h.service.CreateUpdateAdvertisers(ctx, advertisers)
 	if err != nil {
-		switch err {
-		case domain.ErrAdvertiserAlreadyExists:
-			http.Error(w, err.Error(), http.StatusConflict)
-		case domain.ErrBadRequest:
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		default:
-			log.Printf("[INTERNAL ERROR] failed to create advertiser: %v", err)
-			http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
-		}
+		log.Printf("[INTERNAL ERROR] failed to create advertiser: %v", err)
+		WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
 		return
 	}
 
@@ -68,16 +61,15 @@ func (h *AdvertiserHandler) CreateAdvertisers(w http.ResponseWriter, r *http.Req
 //	@Tags			Advertisers
 //	@Produce		json
 //	@Success		200	{object}	domain.Advertiser
-//	@Failure		400	{string}	string	"Bad request"
-//	@Failure		404	{string}	string	"Not found"
-//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Failure		400	{object} ErrorResponse
+//	@Failure		404	{object} ErrorResponse
+//	@Failure		500	{object} ErrorResponse
 //	@Router			/advertisers/{advertiserId} [get]
 func (h *AdvertiserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	advertiserID, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
 	if err != nil {
-		log.Printf("failed to convert advertiserID to uuid: %v", err)
-		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
+		WriteError(w, http.StatusBadRequest, "Некорректный запрос", "невалидный ID рекламодателя")
 		return
 	}
 
@@ -89,7 +81,7 @@ func (h *AdvertiserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 			return
 		default:
 			log.Printf("[INTERNAL ERROR] failed to get advertiser: %v", err)
-			http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
 		}
 	}
 
@@ -104,9 +96,9 @@ func (h *AdvertiserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Param			MLScore	body	domain.MLScore	true	"MLScore"
 //	@Produce		json
-//	@Success		200
-//	@Failure		400	{string}	string	"Bad request"
-//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Success		200 {object} domain.MLScore
+//	@Failure		400	{object} ErrorResponse
+//	@Failure		500	{object} ErrorResponse
 //	@Router			/ml-scores [post]
 func (h *AdvertiserHandler) CreateUpdateMLScore(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -114,14 +106,14 @@ func (h *AdvertiserHandler) CreateUpdateMLScore(w http.ResponseWriter, r *http.R
 	var score *domain.MLScore
 
 	if err := json.NewDecoder(r.Body).Decode(&score); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		WriteError(w, http.StatusBadRequest, "Некорректный запрос", err.Error())
 		return
 	}
 
 	newScore, err := h.service.CreateUpdateMLScore(ctx, score)
 	if err != nil {
 		log.Printf("failed to create or update ml score: %v", err)
-		http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+		WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
 		return
 	}
 

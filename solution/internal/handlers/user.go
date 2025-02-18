@@ -30,8 +30,8 @@ func NewUserHandler(service *app.UserService) *UserHandler {
 //	@Param			clients	body	[]domain.User	true	"Clients"
 //	@Produce		json
 //	@Success		201	{object}	[]domain.User
-//	@Failure		400	{string}	string	"Bad request"
-//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Failure		400 {object} ErrorResponse
+//	@Failure		500	{object} ErrorResponse
 //	@Router			/clients/bulk [post]
 func (h *UserHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -39,7 +39,7 @@ func (h *UserHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 	var users []*domain.User
 
 	if err := json.NewDecoder(r.Body).Decode(&users); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		WriteError(w, http.StatusBadRequest, "Некорректный запрос", err.Error())
 		return
 	}
 
@@ -47,10 +47,10 @@ func (h *UserHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrBadRequest:
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			WriteError(w, http.StatusBadRequest, "Некорректный запрос", "")
 		default:
 			log.Printf("[INTERNAL ERROR] failed to create client: %v", err)
-			http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
 		}
 		return
 	}
@@ -67,16 +67,15 @@ func (h *UserHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 //	@Param			clientId	path	string	true	"UUID клиента"
 //	@Produce		json
 //	@Success		200	{object}	[]domain.User
-//	@Failure		400	{string}	string	"Bad request"
-//	@Failure		404	{string}	string	"Client not found"
-//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Failure		400	{object} ErrorResponse
+//	@Failure		404	{object} ErrorResponse
+//	@Failure		500	{object} ErrorResponse
 //	@Router			/clients/{clientId} [get]
 func (h *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	clientID, err := uuid.Parse(chi.URLParam(r, "clientId"))
 	if err != nil {
-		log.Printf("failed to convert clientID to uuid: %v", err)
-		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
+		WriteError(w, http.StatusBadRequest, "Некорректный запрос", "невалидный ID клиента")
 		return
 	}
 
@@ -84,11 +83,11 @@ func (h *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrUserNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
+			WriteError(w, http.StatusNotFound, "Пользователь не найден", "")
 			return
 		default:
 			log.Printf("[INTERNAL ERROR] failed to get client: %v", err)
-			http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
 		}
 	}
 

@@ -28,8 +28,8 @@ func NewTimeHandler(service *app.TimeService) *TimeHandler {
 //	@Param			newDate	body	domain.CurrentDate	true	"Новый текущий день"
 //	@Produce		json
 //	@Success		200	{object}	domain.CurrentDate
-//	@Failure		400	{string}	string "Bad request"
-//	@Failure		500	{string}	string "Internal Server Error"
+//	@Failure		400	{object} ErrorResponse
+//	@Failure		500	{object} ErrorResponse
 //	@Router			/time/advance [post]
 func (h *TimeHandler) SetCurrentDate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -37,18 +37,18 @@ func (h *TimeHandler) SetCurrentDate(w http.ResponseWriter, r *http.Request) {
 	var body domain.CurrentDate
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
+		WriteError(w, http.StatusBadRequest, "Некорректный запрос", err.Error())
 		return
 	}
 
 	if err := h.service.SetCurrentDate(ctx, body.CurrentDate); err != nil {
 		switch err {
 		case domain.ErrNewDateLowerThanCurrent:
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			WriteError(w, http.StatusBadRequest, "Некорректный запрос", "новая дата меньше текущей")
 			return
 		default:
 			log.Printf("[INTERNAL ERROR] failed to set current date: %v", err)
-			http.Error(w, domain.ErrInternalServerError.Error(), http.StatusInternalServerError)
+			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
 			return
 		}
 	}

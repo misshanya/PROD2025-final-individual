@@ -14,6 +14,7 @@ var (
 	ErrAdvertiserAlreadyExists = errors.New("advertiser already exists")
 	ErrNotFound                = errors.New("not found")
 	ErrUserNotFound            = errors.New("client not found")
+	ErrAdNotFound              = errors.New("ad not found")
 	ErrAdvertiserNotFound      = errors.New("advertiser not found")
 
 	ErrNewDateLowerThanCurrent = errors.New("new date must be bigger than current")
