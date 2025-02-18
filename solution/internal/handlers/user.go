@@ -21,6 +21,18 @@ func NewUserHandler(service *app.UserService) *UserHandler {
 	}
 }
 
+// CreateUsers godoc
+//
+//	@Summary		Массовое создание/обновление клиентов
+//	@Description	Создает новых или обновляет существующих клиентов
+//	@Tags			Clients
+//	@Accept			json
+//	@Param			clients	body	[]domain.User	true	"Clients"
+//	@Produce		json
+//	@Success		201	{object}	[]domain.User
+//	@Failure		400	{string}	string	"Bad request"
+//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Router			/clients/bulk [post]
 func (h *UserHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -47,6 +59,18 @@ func (h *UserHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newUsers)
 }
 
+// GetByID godoc
+//
+//	@Summary		Получение клиента по ID
+//	@Description	Возвращает информацию о клиенте по его ID
+//	@Tags			Clients
+//	@Param			clientId	path	string	true	"UUID клиента"
+//	@Produce		json
+//	@Success		200	{object}	[]domain.User
+//	@Failure		400	{string}	string	"Bad request"
+//	@Failure		404	{string}	string	"Client not found"
+//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Router			/clients/{clientId} [get]
 func (h *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	clientID, err := uuid.Parse(chi.URLParam(r, "clientId"))

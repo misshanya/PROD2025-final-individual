@@ -19,12 +19,22 @@ func NewTimeHandler(service *app.TimeService) *TimeHandler {
 	}
 }
 
+// SetCurrentDate godoc
+//
+//	@Summary		Установка текущей даты
+//	@Description	Устанавливает текущий день в системе в заданную дату
+//	@Tags			Time
+//	@Accept			json
+//	@Param			newDate	body	domain.CurrentDate	true	"Новый текущий день"
+//	@Produce		json
+//	@Success		200	{object}	domain.CurrentDate
+//	@Failure		400	{string}	string "Bad request"
+//	@Failure		500	{string}	string "Internal Server Error"
+//	@Router			/time/advance [post]
 func (h *TimeHandler) SetCurrentDate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var body struct {
-		CurrentDate int `json:"current_date"`
-	}
+	var body domain.CurrentDate
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)

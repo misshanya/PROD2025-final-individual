@@ -9,6 +9,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+	_ "gitlab.prodcontest.ru/2025-final-projects-back/misshanya/docs"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/app"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/config"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/handlers"
@@ -17,6 +19,10 @@ import (
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/repository"
 )
 
+// @title			PROD Backend 2025 Advertising Platform API
+// @version		1.0
+// @description	API для управления данными клиентов, рекламодателей, рекламными кампаниями, показом объявлений, статистикой и управлением "текущим днём" в системе.
+// @license.name	GPL 3.0
 func main() {
 	cfg := config.NewConfig()
 
@@ -86,6 +92,9 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	r.Post("/clients/bulk", userHandler.CreateUsers)
 	r.Get("/clients/{clientId}", userHandler.GetByID)

@@ -22,6 +22,19 @@ func NewCampaignHandler(service *app.CampaignService) *CampaignHandler {
 	}
 }
 
+// CreateCampaign godoc
+//
+//	@Summary		Создание кампании
+//	@Description	Создает рекламную кампанию
+//	@Tags			Campaigns
+//	@Accept			json
+//	@Param			CreateCampaign	body	domain.CampaignRequest	true	"CampaignRequest"
+//	@Param			advertiserId	path	string					true	"Advertiser ID"
+//	@Produce		json
+//	@Success		200	{object}	domain.Campaign
+//	@Failure		400	{string}	string	"Bad request"
+//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Router			/advertisers/{advertiserId}/campaigns [post]
 func (h *CampaignHandler) CreateCampaign(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -54,6 +67,17 @@ func (h *CampaignHandler) CreateCampaign(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(campaign)
 }
 
+// GetCampaignsByAdvertiserID godoc
+//
+//	@Summary		Получение кампаний рекламодателя
+//	@Description	Возвращает кампании рекламодателя по его ID
+//	@Tags			Campaigns
+//	@Produce		json
+//	@Param			advertiserId	path		string	true	"ID рекламодателя"
+//	@Success		200				{object}	[]domain.Campaign
+//	@Failure		400				{string}	string	"Bad request"
+//	@Failure		500				{string}	string	"Internal Server Error"
+//	@Router			/advertisers/{advertiserId}/campaigns [get]
 func (h *CampaignHandler) GetCampaignsByAdvertiserID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -98,6 +122,17 @@ func (h *CampaignHandler) GetCampaignsByAdvertiserID(w http.ResponseWriter, r *h
 	json.NewEncoder(w).Encode(campaigns)
 }
 
+// GetCampaignByID godoc
+//
+//	@Summary		Получение кампании
+//	@Description	Возвращает кампанию по ее ID
+//	@Tags			Campaigns
+//	@Produce		json
+//	@Success		200	{object}	domain.Campaign
+//	@Failure		400	{string}	string	"Bad request"
+//	@Failure		404	{string}	string	"Not found"
+//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Router			/advertisers/{advertiserId}/campaigns/{campaignId} [get]
 func (h *CampaignHandler) GetCampaignByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -129,6 +164,20 @@ func (h *CampaignHandler) GetCampaignByID(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(campaign)
 }
 
+// UpdateCampaign godoc
+//
+//	@Summary		Обновление кампании
+//	@Description	Обновляет разрешённые параметры рекламной кампании
+//	@Tags			Campaigns
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	domain.Campaign
+//	@Failure		400	{string}	string	"Moderation Not Passed"
+//
+//	@Failure		400	{string}	string	"Bad request"
+//
+//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Router			/advertisers/{advertiserId}/campaigns/{campaignId} [put]
 func (h *CampaignHandler) UpdateCampaign(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -166,6 +215,14 @@ func (h *CampaignHandler) UpdateCampaign(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(newCampaign)
 }
 
+// DeleteCampaign godoc
+//
+//	@Summary		Удаление рекламной кампании
+//	@Description	Удаляет рекламную кампанию по ее ID
+//	@Tags			Campaigns
+//	@Success		204
+//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Router			/advertisers/{advertiserId}/campaigns/{campaignId} [delete]
 func (h *CampaignHandler) DeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -191,6 +248,19 @@ func (h *CampaignHandler) DeleteCampaign(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// GenerateAdText godoc
+//
+//	@Summary		Генерация текста рекламы
+//	@Description	Генерирует текст рекламы на основе имени рекламодателя и названии рекламы
+//	@Tags			Campaigns
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	domain.GenerateAdTextResponse
+//
+//	@Failure		400	{string}	string	"Bad request"
+//
+//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Router			/advertisers/campaigns/generate [post]
 func (h *CampaignHandler) GenerateAdText(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -215,6 +285,15 @@ func (h *CampaignHandler) GenerateAdText(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(response)
 }
 
+// SwitchModeration godoc
+//
+//	@Summary		Переключение модерации
+//	@Description	Переключает статус модерации. Может быть true или false
+//	@Tags			Campaigns
+//	@Produce		json
+//	@Success		200	{object}	domain.SwitchModerationResponse
+//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Router			/advertisers/campaigns/moderation [patch]
 func (h *CampaignHandler) SwitchModeration(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

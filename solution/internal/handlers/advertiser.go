@@ -21,6 +21,18 @@ func NewAdvertiserHandler(service *app.AdvertiserService) *AdvertiserHandler {
 	}
 }
 
+// CreateAdvertisers godoc
+//
+//	@Summary		Создание/обновление рекламодателей
+//	@Description	Создает или обновляет рекламодателей
+//	@Tags			Advertisers
+//	@Accept			json
+//	@Param			CreateAdvertisers	body	[]domain.Advertiser	true	"CampaignRequest"
+//	@Produce		json
+//	@Success		201	{object}	[]domain.Advertiser
+//	@Failure		400	{string}	BadRequest	"Bad request"
+//	@Failure		500	{string}	string		"Internal Server Error"
+//	@Router			/advertisers/bulk [post]
 func (h *AdvertiserHandler) CreateAdvertisers(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -49,6 +61,17 @@ func (h *AdvertiserHandler) CreateAdvertisers(w http.ResponseWriter, r *http.Req
 	json.NewEncoder(w).Encode(newAdvertisers)
 }
 
+// GetByID godoc
+//
+//	@Summary		Получение рекламодателя по ID
+//	@Description	Возвращает информацию о рекламодателе по его ID
+//	@Tags			Advertisers
+//	@Produce		json
+//	@Success		200	{object}	domain.Advertiser
+//	@Failure		400	{string}	string	"Bad request"
+//	@Failure		404	{string}	string	"Not found"
+//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Router			/advertisers/{advertiserId} [get]
 func (h *AdvertiserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	advertiserID, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
@@ -73,6 +96,18 @@ func (h *AdvertiserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(advertiser)
 }
 
+// CreateUpdateMLScore godoc
+//
+//	@Summary		Добавление или обновление ML скора
+//	@Description	Добавляет или обновляет ML скор для указанной пары клиент-рекламодатель
+//	@Tags			Advertisers
+//	@Accept			json
+//	@Param			MLScore	body	domain.MLScore	true	"MLScore"
+//	@Produce		json
+//	@Success		200
+//	@Failure		400	{string}	string	"Bad request"
+//	@Failure		500	{string}	string	"Internal Server Error"
+//	@Router			/ml-scores [post]
 func (h *AdvertiserHandler) CreateUpdateMLScore(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

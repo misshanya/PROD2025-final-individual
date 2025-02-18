@@ -1,0 +1,495 @@
+definitions:
+  domain.Advertiser:
+    properties:
+      advertiser_id:
+        type: string
+      name:
+        type: string
+    type: object
+  domain.Campaign:
+    properties:
+      ad_text:
+        type: string
+      ad_title:
+        type: string
+      advertiser_id:
+        type: string
+      campaign_id:
+        type: string
+      clicks_limit:
+        type: integer
+      cost_per_click:
+        type: number
+      cost_per_impression:
+        type: number
+      end_date:
+        type: integer
+      impressions_limit:
+        type: integer
+      start_date:
+        type: integer
+      targeting:
+        $ref: '#/definitions/domain.Targeting'
+    type: object
+  domain.CampaignRequest:
+    properties:
+      ad_text:
+        type: string
+      ad_title:
+        type: string
+      clicks_limit:
+        type: integer
+      cost_per_click:
+        type: number
+      cost_per_impression:
+        type: number
+      end_date:
+        type: integer
+      impressions_limit:
+        type: integer
+      start_date:
+        type: integer
+      targeting:
+        $ref: '#/definitions/domain.Targeting'
+    type: object
+  domain.Click:
+    properties:
+      client_id:
+        type: string
+    type: object
+  domain.CurrentDate:
+    properties:
+      current_date:
+        type: integer
+    type: object
+  domain.GenerateAdTextResponse:
+    properties:
+      ad_text:
+        type: string
+    type: object
+  domain.MLScore:
+    properties:
+      advertiser_id:
+        type: string
+      client_id:
+        type: string
+      score:
+        type: integer
+    type: object
+  domain.SwitchModerationResponse:
+    properties:
+      is_moderated:
+        type: boolean
+    type: object
+  domain.Targeting:
+    properties:
+      age_from:
+        type: integer
+      age_to:
+        type: integer
+      gender:
+        type: string
+      location:
+        type: string
+    type: object
+  domain.User:
+    properties:
+      age:
+        type: integer
+      client_id:
+        type: string
+      gender:
+        type: string
+      location:
+        type: string
+      login:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API для управления данными клиентов, рекламодателей, рекламными кампаниями,
+    показом объявлений, статистикой и управлением "текущим днём" в системе.
+  license:
+    name: GPL 3.0
+  title: PROD Backend 2025 Advertising Platform API
+  version: "1.0"
+paths:
+  /ads/{adId}/click:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: click
+        in: body
+        name: click
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Click'
+      - description: UUID рекламного объявления (идентификатор кампании), по которому
+          совершен клик
+        in: path
+        name: adId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Фиксация перехода по рекламному объявлению
+      tags:
+      - Ads
+  /advertisers/{advertiserId}:
+    get:
+      description: Возвращает информацию о рекламодателе по его ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Advertiser'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Получение рекламодателя по ID
+      tags:
+      - Advertisers
+  /advertisers/{advertiserId}/campaigns:
+    get:
+      description: Возвращает кампании рекламодателя по его ID
+      parameters:
+      - description: ID рекламодателя
+        in: path
+        name: advertiserId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Campaign'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Получение кампаний рекламодателя
+      tags:
+      - Campaigns
+    post:
+      consumes:
+      - application/json
+      description: Создает рекламную кампанию
+      parameters:
+      - description: CampaignRequest
+        in: body
+        name: CreateCampaign
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CampaignRequest'
+      - description: Advertiser ID
+        in: path
+        name: advertiserId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Campaign'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Создание кампании
+      tags:
+      - Campaigns
+  /advertisers/{advertiserId}/campaigns/{campaignId}:
+    delete:
+      description: Удаляет рекламную кампанию по ее ID
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Удаление рекламной кампании
+      tags:
+      - Campaigns
+    get:
+      description: Возвращает кампанию по ее ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Campaign'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Получение кампании
+      tags:
+      - Campaigns
+    put:
+      consumes:
+      - application/json
+      description: Обновляет разрешённые параметры рекламной кампании
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Campaign'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Обновление кампании
+      tags:
+      - Campaigns
+  /advertisers/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Создает или обновляет рекламодателей
+      parameters:
+      - description: CampaignRequest
+        in: body
+        name: CreateAdvertisers
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/domain.Advertiser'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/domain.Advertiser'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Создание/обновление рекламодателей
+      tags:
+      - Advertisers
+  /advertisers/campaigns/generate:
+    post:
+      consumes:
+      - application/json
+      description: Генерирует текст рекламы на основе имени рекламодателя и названии
+        рекламы
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GenerateAdTextResponse'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Генерация текста рекламы
+      tags:
+      - Campaigns
+  /advertisers/campaigns/moderation:
+    patch:
+      description: Переключает статус модерации. Может быть true или false
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SwitchModerationResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Переключение модерации
+      tags:
+      - Campaigns
+  /clients/{clientId}:
+    get:
+      description: Возвращает информацию о клиенте по его ID
+      parameters:
+      - description: UUID клиента
+        in: path
+        name: clientId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.User'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "404":
+          description: Client not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Получение клиента по ID
+      tags:
+      - Clients
+  /clients/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Создает новых или обновляет существующих клиентов
+      parameters:
+      - description: Clients
+        in: body
+        name: clients
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/domain.User'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/domain.User'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Массовое создание/обновление клиентов
+      tags:
+      - Clients
+  /ml-scores:
+    post:
+      consumes:
+      - application/json
+      description: Добавляет или обновляет ML скор для указанной пары клиент-рекламодатель
+      parameters:
+      - description: MLScore
+        in: body
+        name: MLScore
+        required: true
+        schema:
+          $ref: '#/definitions/domain.MLScore'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Добавление или обновление ML скора
+      tags:
+      - Advertisers
+  /time/advance:
+    post:
+      consumes:
+      - application/json
+      description: Устанавливает текущий день в системе в заданную дату
+      parameters:
+      - description: Новый текущий день
+        in: body
+        name: newDate
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CurrentDate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.CurrentDate'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Установка текущей даты
+      tags:
+      - Time
+swagger: "2.0"
