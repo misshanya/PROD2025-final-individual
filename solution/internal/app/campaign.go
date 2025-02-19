@@ -40,6 +40,10 @@ func NewCampaignService(repo repository.CampaignRepository,
 }
 
 func (s *CampaignService) CreateCampaign(ctx context.Context, advertiserID uuid.UUID, campaignRequest *domain.CampaignRequest) (*domain.Campaign, error) {
+	_, err := s.advertiserRepo.GetByID(ctx, advertiserID)
+	if err != nil {
+		return nil, domain.ErrAdvertiserNotFound
+	}
 	isModerated, err := s.checkModeration(ctx)
 	if err != nil {
 		return nil, err

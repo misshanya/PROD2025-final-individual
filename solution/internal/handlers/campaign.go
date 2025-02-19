@@ -35,6 +35,7 @@ func NewCampaignHandler(service *app.CampaignService) *CampaignHandler {
 //	@Produce		json
 //	@Success		200	{object}	domain.Campaign
 //	@Failure		400	{object}	ErrorResponse
+//	@Failure		404	{object}	ErrorResponse
 //	@Failure		500	{object}	ErrorResponse
 //	@Router			/advertisers/{advertiserId}/campaigns [post]
 func (h *CampaignHandler) CreateCampaign(w http.ResponseWriter, r *http.Request) {
@@ -55,9 +56,11 @@ func (h *CampaignHandler) CreateCampaign(w http.ResponseWriter, r *http.Request)
 
 	campaign, err := h.service.CreateCampaign(ctx, advertiserID, campaignRequest)
 	if err != nil {
-		switch err {
-		case domain.ErrBadRequest, domain.ErrModerationNotPassed:
+		switch {
+		case errors.Is(err, domain.ErrBadRequest), errors.Is(err, domain.ErrModerationNotPassed):
 			WriteError(w, http.StatusBadRequest, "Некорректный запрос", err.Error())
+		case errors.Is(err, domain.ErrAdvertiserNotFound):
+			WriteError(w, http.StatusNotFound, "Рекламодатель не найден", "")
 		default:
 			log.Printf("[INTERNAL ERROR] failed to create campaign: %v", err)
 			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
