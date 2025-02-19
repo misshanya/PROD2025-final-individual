@@ -38,6 +38,9 @@ func validateUser(user *domain.User) error {
 	if user.Age <= 0 || user.Age >= 200 {
 		return fmt.Errorf("age must be greater than 0 and lower than 200")
 	}
+	if !isValidGender(user.Gender) {
+		return fmt.Errorf("invalid user gender")
+	}
 	return nil
 }
 
