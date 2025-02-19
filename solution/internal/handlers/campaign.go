@@ -189,10 +189,12 @@ func (h *CampaignHandler) GetCampaignsByAdvertiserID(w http.ResponseWriter, r *h
 //	@Description	Возвращает кампанию по ее ID
 //	@Tags			Campaigns
 //	@Produce		json
-//	@Success		200	{object}	domain.Campaign
-//	@Failure		400	{object}	ErrorResponse
-//	@Failure		404	{object}	ErrorResponse
-//	@Failure		500	{object}	ErrorResponse
+//	@Param			advertiserId	path		string	true	"ID рекламодателя"
+//	@Param			campaignId		path		string	true	"ID рекламной кампании"
+//	@Success		200				{object}	domain.Campaign
+//	@Failure		400				{object}	ErrorResponse
+//	@Failure		404				{object}	ErrorResponse
+//	@Failure		500				{object}	ErrorResponse
 //	@Router			/advertisers/{advertiserId}/campaigns/{campaignId} [get]
 func (h *CampaignHandler) GetCampaignByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()

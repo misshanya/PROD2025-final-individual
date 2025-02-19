@@ -337,6 +337,22 @@ const docTemplate = `{
                     "Campaigns"
                 ],
                 "summary": "Получение кампании",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID рекламодателя",
+                        "name": "advertiserId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID рекламной кампании",
+                        "name": "campaignId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
