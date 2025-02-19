@@ -137,6 +137,7 @@ func (h *CampaignHandler) SetCampaignPicture(w http.ResponseWriter, r *http.Requ
 //	@Param			advertiserId	path		string	true	"ID рекламодателя"
 //	@Success		200				{object}	[]domain.Campaign
 //	@Failure		400				{object}	ErrorResponse
+//	@Failure		404				{object}	ErrorResponse
 //	@Failure		500				{object}	ErrorResponse
 //	@Router			/advertisers/{advertiserId}/campaigns [get]
 func (h *CampaignHandler) GetCampaignsByAdvertiserID(w http.ResponseWriter, r *http.Request) {
@@ -175,8 +176,13 @@ func (h *CampaignHandler) GetCampaignsByAdvertiserID(w http.ResponseWriter, r *h
 
 	campaigns, err := h.service.GetCampaignsByAdvertiserID(ctx, advertiserID, size, page)
 	if err != nil {
-		log.Printf("[INTERNAL ERROR] failed to get campaigns: %v", err)
-		WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
+		switch {
+		case errors.Is(err, domain.ErrAdvertiserNotFound):
+			WriteError(w, http.StatusNotFound, "Рекламодатель не найден", "")
+		default:
+			log.Printf("[INTERNAL ERROR] failed to get campaigns: %v", err)
+			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
+		}
 		return
 	}
 
@@ -199,7 +205,7 @@ func (h *CampaignHandler) GetCampaignsByAdvertiserID(w http.ResponseWriter, r *h
 func (h *CampaignHandler) GetCampaignByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	_, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
+	advertiserID, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
 	if err != nil {
 		WriteError(w, http.StatusBadRequest, "Некорректный запрос", "невалидный ID рекламодателя")
 		return
@@ -211,17 +217,18 @@ func (h *CampaignHandler) GetCampaignByID(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	campaign, err := h.service.GetCampaignByID(ctx, campaignID)
+	campaign, err := h.service.GetCampaignByID(ctx, advertiserID, campaignID)
 	if err != nil {
-		switch err {
-		case domain.ErrNotFound:
+		switch {
+		case errors.Is(err, domain.ErrAdvertiserNotFound):
+			WriteError(w, http.StatusNotFound, "Рекламодатель не найден", "")
+		case errors.Is(err, domain.ErrAdNotFound):
 			WriteError(w, http.StatusNotFound, "Рекламная компания не найдена", "")
-			return
 		default:
 			log.Printf("[INTERNAL ERROR] failed to get campaign by id: %v", err)
 			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
-			return
 		}
+		return
 	}
 
 	json.NewEncoder(w).Encode(campaign)
@@ -236,13 +243,13 @@ func (h *CampaignHandler) GetCampaignByID(w http.ResponseWriter, r *http.Request
 //	@Produce		json
 //	@Success		200	{object}	domain.Campaign
 //	@Failure		400	{object}	ErrorResponse
-//	@Failure		400	{object}	ErrorResponse
+//	@Failure		404	{object}	ErrorResponse
 //	@Failure		500	{object}	ErrorResponse
 //	@Router			/advertisers/{advertiserId}/campaigns/{campaignId} [put]
 func (h *CampaignHandler) UpdateCampaign(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	_, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
+	advertiserID, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
 	if err != nil {
 		WriteError(w, http.StatusBadRequest, "Некорректный запрос", "невалидный ID рекламодателя")
 		return
@@ -261,10 +268,14 @@ func (h *CampaignHandler) UpdateCampaign(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	newCampaign, err := h.service.UpdateCampaign(ctx, campaignID, campaignUpdate)
+	newCampaign, err := h.service.UpdateCampaign(ctx, advertiserID, campaignID, campaignUpdate)
 	if err != nil {
-		switch err {
-		case domain.ErrModerationNotPassed:
+		switch {
+		case errors.Is(err, domain.ErrAdvertiserNotFound):
+			WriteError(w, http.StatusNotFound, "Рекламодатель не найден", "")
+		case errors.Is(err, domain.ErrAdNotFound):
+			WriteError(w, http.StatusNotFound, "Рекламная кампания не найдена", "")
+		case errors.Is(err, domain.ErrModerationNotPassed):
 			WriteError(w, http.StatusBadRequest, "Некорректный запрос", "модерация не пройдена")
 		default:
 			log.Printf("[INTERNAL ERROR] failed to update campaign: %v", err)
@@ -282,12 +293,13 @@ func (h *CampaignHandler) UpdateCampaign(w http.ResponseWriter, r *http.Request)
 //	@Description	Удаляет рекламную кампанию по ее ID
 //	@Tags			Campaigns
 //	@Success		204
+//	@Failure		404	{object}	ErrorResponse
 //	@Failure		500	{object}	ErrorResponse
 //	@Router			/advertisers/{advertiserId}/campaigns/{campaignId} [delete]
 func (h *CampaignHandler) DeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	_, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
+	advertiserID, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
 	if err != nil {
 		WriteError(w, http.StatusBadRequest, "Некорректный запрос", "невалидный ID рекламодателя")
 		return
@@ -299,10 +311,17 @@ func (h *CampaignHandler) DeleteCampaign(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = h.service.DeleteCampaign(ctx, campaignID)
+	err = h.service.DeleteCampaign(ctx, advertiserID, campaignID)
 	if err != nil {
-		log.Printf("[INTERNAL ERROR] failed to delete campaign: %v", err)
-		WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
+		switch {
+		case errors.Is(err, domain.ErrAdvertiserNotFound):
+			WriteError(w, http.StatusNotFound, "Рекламодатель не найден", "")
+		case errors.Is(err, domain.ErrAdNotFound):
+			WriteError(w, http.StatusNotFound, "Рекламная кампания не найдена", "")
+		default:
+			log.Printf("[INTERNAL ERROR] failed to delete campaign: %v", err)
+			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
+		}
 		return
 	}
 

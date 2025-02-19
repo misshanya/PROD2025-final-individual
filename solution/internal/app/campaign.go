@@ -93,6 +93,10 @@ func (s *CampaignService) SetCampaignPicture(ctx context.Context,
 }
 
 func (s *CampaignService) GetCampaignsByAdvertiserID(ctx context.Context, advertiserID uuid.UUID, size, page int) ([]domain.Campaign, error) {
+	_, err := s.advertiserRepo.GetByID(ctx, advertiserID)
+	if err != nil {
+		return []domain.Campaign{}, domain.ErrAdvertiserNotFound
+	}
 	offset := size * page
 	campaigns, err := s.repo.GetCampaignsByAdvertiserID(ctx, advertiserID, size, offset)
 	if err != nil {
@@ -112,10 +116,14 @@ func (s *CampaignService) GetCampaignsByAdvertiserID(ctx context.Context, advert
 	return campaigns, nil
 }
 
-func (s *CampaignService) GetCampaignByID(ctx context.Context, campaignID uuid.UUID) (*domain.Campaign, error) {
-	campaign, err := s.repo.GetCampaignByID(ctx, campaignID)
+func (s *CampaignService) GetCampaignByID(ctx context.Context, advertiserID, campaignID uuid.UUID) (*domain.Campaign, error) {
+	_, err := s.advertiserRepo.GetByID(ctx, advertiserID)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrAdvertiserNotFound
+	}
+	campaign, err := s.repo.GetCampaignByID(ctx, campaignID)
+	if err == pgx.ErrNoRows {
+		return nil, domain.ErrAdNotFound
 	}
 	picID, err := s.repo.GetCampaignPicID(ctx, campaignID)
 	if err != nil || picID == "" {
@@ -129,7 +137,15 @@ func (s *CampaignService) GetCampaignByID(ctx context.Context, campaignID uuid.U
 	return campaign, nil
 }
 
-func (s *CampaignService) UpdateCampaign(ctx context.Context, campaignID uuid.UUID, campaignUpdate domain.CampaignUpdateRequest) (*domain.Campaign, error) {
+func (s *CampaignService) UpdateCampaign(ctx context.Context, advertiserID, campaignID uuid.UUID, campaignUpdate domain.CampaignUpdateRequest) (*domain.Campaign, error) {
+	_, err := s.advertiserRepo.GetByID(ctx, advertiserID)
+	if err != nil {
+		return nil, domain.ErrAdvertiserNotFound
+	}
+	_, err = s.repo.GetCampaignByID(ctx, campaignID)
+	if err == pgx.ErrNoRows {
+		return nil, domain.ErrAdNotFound
+	}
 	isModerated, err := s.checkModeration(ctx)
 	if err != nil {
 		return nil, err
@@ -165,8 +181,16 @@ func (s *CampaignService) UpdateCampaign(ctx context.Context, campaignID uuid.UU
 	return campaign, nil
 }
 
-func (s *CampaignService) DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error {
-	err := s.repo.DeleteCampaign(ctx, campaignID)
+func (s *CampaignService) DeleteCampaign(ctx context.Context, advertiserID, campaignID uuid.UUID) error {
+	_, err := s.advertiserRepo.GetByID(ctx, advertiserID)
+	if err != nil {
+		return domain.ErrAdvertiserNotFound
+	}
+	_, err = s.repo.GetCampaignByID(ctx, campaignID)
+	if err == pgx.ErrNoRows {
+		return domain.ErrAdNotFound
+	}
+	err = s.repo.DeleteCampaign(ctx, campaignID)
 	return err
 }
 
