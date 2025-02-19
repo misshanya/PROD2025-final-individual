@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/redis/go-redis/v9"
@@ -32,11 +32,11 @@ func main() {
 	ctx := context.Background()
 
 	// Init db connection
-	conn, err := pgx.Connect(ctx, cfg.DatabaseURL)
+	conn, err := InitDB(ctx, cfg.DatabaseURL)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	defer conn.Close(ctx)
+	defer conn.Close()
 
 	// Init SQL queries
 	queries := storage.New(conn)
@@ -203,4 +203,15 @@ func jsonMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		next.ServeHTTP(w, r)
 	})
+}
+
+func InitDB(ctx context.Context, dbURL string) (*pgxpool.Pool, error) {
+	pool, err := pgxpool.New(ctx, dbURL)
+	if err != nil {
+		return nil, err
+	}
+
+	pool.Config().MaxConns = 100 // Max 100 connections
+
+	return pool, nil
 }

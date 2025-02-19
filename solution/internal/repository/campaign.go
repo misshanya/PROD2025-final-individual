@@ -8,16 +8,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/domain"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/infrastructure/db/sqlc/storage"
 )
 
 type CampaignRepository struct {
 	queries *storage.Queries
-	dbConn  *pgx.Conn
+	dbConn  *pgxpool.Pool
 }
 
-func NewCampaignRepository(queries *storage.Queries, dbConn *pgx.Conn) *CampaignRepository {
+func NewCampaignRepository(queries *storage.Queries, dbConn *pgxpool.Pool) *CampaignRepository {
 	return &CampaignRepository{
 		queries: queries,
 		dbConn:  dbConn,

@@ -42,8 +42,10 @@ func NewCampaignService(repo repository.CampaignRepository,
 func (s *CampaignService) CreateCampaign(ctx context.Context, advertiserID uuid.UUID, campaignRequest *domain.CampaignRequest) (*domain.Campaign, error) {
 	// Check if advertiser exists
 	_, err := s.advertiserRepo.GetByID(ctx, advertiserID)
-	if err != nil {
+	if err == pgx.ErrNoRows {
 		return nil, domain.ErrAdvertiserNotFound
+	} else if err != nil {
+		return nil, err
 	}
 
 	// Validate targeting
