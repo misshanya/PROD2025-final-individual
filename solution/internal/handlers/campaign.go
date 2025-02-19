@@ -33,7 +33,7 @@ func NewCampaignHandler(service *app.CampaignService) *CampaignHandler {
 //	@Param			CreateCampaign	body	domain.CampaignRequest	true	"CampaignRequest"
 //	@Param			advertiserId	path	string					true	"Advertiser ID"
 //	@Produce		json
-//	@Success		200	{object}	domain.Campaign
+//	@Success		201	{object}	domain.Campaign
 //	@Failure		400	{object}	ErrorResponse
 //	@Failure		404	{object}	ErrorResponse
 //	@Failure		500	{object}	ErrorResponse
