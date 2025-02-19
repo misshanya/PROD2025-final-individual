@@ -249,7 +249,7 @@ func (s *CampaignService) validateTargeting(targeting domain.Targeting) bool {
 		}
 	}
 
-	if !isValidGender(*targeting.Gender) {
+	if targeting.Gender != nil && !isValidGender(*targeting.Gender) {
 		return false
 	}
 
