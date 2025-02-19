@@ -46,8 +46,8 @@ func (s *CampaignService) CreateCampaign(ctx context.Context, advertiserID uuid.
 		return nil, domain.ErrAdvertiserNotFound
 	}
 
-	// Validate gender
-	if campaignRequest.Targeting.Gender != nil && !isValidGender(*campaignRequest.Targeting.Gender) {
+	// Validate targeting
+	if !s.validateTargeting(campaignRequest.Targeting) {
 		return nil, domain.ErrBadRequest
 	}
 
@@ -153,8 +153,8 @@ func (s *CampaignService) UpdateCampaign(ctx context.Context, advertiserID, camp
 		return nil, domain.ErrAdNotFound
 	}
 
-	// Validate gender
-	if campaignUpdate.Targeting.Gender != nil && !isValidGender(*campaignUpdate.Targeting.Gender) {
+	// Validate targeting
+	if !s.validateTargeting(campaignUpdate.Targeting) {
 		return nil, domain.ErrBadRequest
 	}
 
@@ -195,16 +195,6 @@ func (s *CampaignService) UpdateCampaign(ctx context.Context, advertiserID, camp
 	return campaign, nil
 }
 
-func isValidGender(gender string) bool {
-	validGenders := map[string]struct{}{
-		"MALE":   {},
-		"FEMALE": {},
-		"ALL":    {},
-	}
-	_, exists := validGenders[gender]
-	return exists
-}
-
 func (s *CampaignService) DeleteCampaign(ctx context.Context, advertiserID, campaignID uuid.UUID) error {
 	// Check if advertiser exists
 	_, err := s.advertiserRepo.GetByID(ctx, advertiserID)
@@ -242,4 +232,36 @@ func (s *CampaignService) getPicURL(ctx context.Context, campaignID uuid.UUID) (
 
 	// Generate picture URL and return
 	return s.fileRepo.GetFileLink(ctx, picID, s.minioPublicHost)
+}
+
+func (s *CampaignService) validateTargeting(targeting domain.Targeting) bool {
+	if targeting.AgeFrom != nil && *targeting.AgeFrom <= 0 {
+		return false
+	}
+	if targeting.AgeTo != nil && *targeting.AgeTo >= 200 {
+		return false
+	}
+
+	// Check if ageFrom is greater than ageTo
+	if targeting.AgeFrom != nil && targeting.AgeTo != nil {
+		if *targeting.AgeFrom > *targeting.AgeTo {
+			return false
+		}
+	}
+
+	if !isValidGender(*targeting.Gender) {
+		return false
+	}
+
+	return true
+}
+
+func isValidGender(gender string) bool {
+	validGenders := map[string]struct{}{
+		"MALE":   {},
+		"FEMALE": {},
+		"ALL":    {},
+	}
+	_, exists := validGenders[gender]
+	return exists
 }
