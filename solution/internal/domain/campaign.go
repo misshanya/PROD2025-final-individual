@@ -14,6 +14,7 @@ type Campaign struct {
 	StartDate         int32     `json:"start_date"`
 	EndDate           int32     `json:"end_date"`
 	Targeting         Targeting `json:"targeting"`
+	PicURL            *string   `json:"picture,omitempty"`
 }
 
 type CampaignRequest struct {

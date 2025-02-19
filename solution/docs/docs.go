@@ -416,6 +416,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/advertisers/{advertiserId}/campaigns/{campaignId}/picture": {
+            "post": {
+                "description": "Добавляет/обновляет изображение рекламной кампании",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Campaigns"
+                ],
+                "summary": "Добавление картинки к рекламной кампании",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID рекламодателя",
+                        "name": "advertiserId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "UUID рекламной кампании",
+                        "name": "campaignId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Файл изображения для загрузки",
+                        "name": "uploadfile",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/bulk": {
             "post": {
                 "description": "Создает новых или обновляет существующих клиентов",
@@ -652,6 +713,9 @@ const docTemplate = `{
                 },
                 "impressions_limit": {
                     "type": "integer"
+                },
+                "picture": {
+                    "type": "string"
                 },
                 "start_date": {
                     "type": "integer"

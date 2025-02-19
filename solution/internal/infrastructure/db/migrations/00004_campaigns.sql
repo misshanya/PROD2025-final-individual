@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS campaigns (
     ad_title VARCHAR NOT NULL,
     ad_text VARCHAR NOT NULL,
     start_date INT NOT NULL,
-    end_date INT NOT NULL
+    end_date INT NOT NULL,
+    pic_id VARCHAR
 );
 
 CREATE TABLE IF NOT EXISTS campaigns_targeting (

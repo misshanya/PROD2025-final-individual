@@ -111,6 +111,13 @@ func (r *CampaignRepository) CreateCampaign(ctx context.Context, advertiserID uu
 	return &campaign, nil
 }
 
+func (r *CampaignRepository) SetCampaignPicture(ctx context.Context, campaignID uuid.UUID, picID string) error {
+	return r.queries.SetCampaignPicture(ctx, storage.SetCampaignPictureParams{
+		PictureID:  picID,
+		CampaignID: campaignID,
+	})
+}
+
 func (r *CampaignRepository) GetCampaignsByAdvertiserID(ctx context.Context, advertiserID uuid.UUID, size, offset int) ([]domain.Campaign, error) {
 	campaignsDB, err := r.queries.GetCampaignsWithTargetingByAdvertiserID(ctx, storage.GetCampaignsWithTargetingByAdvertiserIDParams{
 		Limit:        int32(size),
@@ -169,6 +176,14 @@ func (r *CampaignRepository) GetCampaignsByAdvertiserID(ctx context.Context, adv
 	}
 
 	return campaigns, nil
+}
+
+func (r *CampaignRepository) GetCampaignPicID(ctx context.Context, campaignID uuid.UUID) (string, error) {
+	picIDPg, err := r.queries.GetCampaignPicID(ctx, campaignID)
+	if err != nil || !picIDPg.Valid {
+		return "", err
+	}
+	return picIDPg.String, nil
 }
 
 func (r *CampaignRepository) GetCampaignByID(ctx context.Context, campaignID uuid.UUID) (*domain.Campaign, error) {

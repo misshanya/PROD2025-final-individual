@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/redis/go-redis/v9"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	_ "gitlab.prodcontest.ru/2025-final-projects-back/misshanya/docs"
@@ -49,6 +52,21 @@ func main() {
 		log.Fatalf("failed to ping redis: %v", err)
 	}
 
+	// Init MinIO client
+	minioClient, err := initMinIO(
+		ctx,
+		cfg.MinIO.Endpoint,
+		cfg.MinIO.AccessKeyID,
+		cfg.MinIO.SecretAccessKey,
+		cfg.MinIO.BucketName,
+	)
+	if err != nil {
+		log.Fatalf("failed to init minio client: %v", err)
+	}
+
+	// Init File repository
+	fileRepo := repository.NewFileRepository(minioClient, cfg.MinIO.BucketName)
+
 	// Init OpenAI service
 	openAIService := ml.NewOpenAIService(cfg.OpenAI.BaseURL, cfg.OpenAI.ApiKey)
 
@@ -78,7 +96,14 @@ func main() {
 
 	// Init campaign repository and service
 	campaignRepo := repository.NewCampaignRepository(queries, conn)
-	campaignService := app.NewCampaignService(*campaignRepo, *timeRepo, openAIService, *mlRepo)
+	campaignService := app.NewCampaignService(
+		*campaignRepo,
+		*advertiserRepo,
+		*timeRepo,
+		openAIService,
+		*mlRepo,
+		*fileRepo,
+		cfg.MinIO.PublicHost)
 
 	// Init campaign handler
 	campaignHandler := handlers.NewCampaignHandler(campaignService)
@@ -110,6 +135,8 @@ func main() {
 	r.Put("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.UpdateCampaign)
 	r.Delete("/advertisers/{advertiserId}/campaigns/{campaignId}", campaignHandler.DeleteCampaign)
 
+	r.Post("/advertisers/{advertiserId}/campaigns/{campaignId}/picture", campaignHandler.SetCampaignPicture)
+
 	r.Post("/advertisers/campaigns/generate", campaignHandler.GenerateAdText)
 
 	r.Patch("/advertisers/campaigns/moderation", campaignHandler.SwitchModeration)
@@ -122,4 +149,50 @@ func main() {
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}
+}
+
+func initMinIO(ctx context.Context, endpoint, accessKeyID, secretAccessKey, bucketName string) (*minio.Client, error) {
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: false,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	exists, err := minioClient.BucketExists(ctx, bucketName)
+	if err != nil {
+		return nil, err
+	}
+
+	if !exists {
+		err = minioClient.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: "us-east-1"})
+		if err != nil {
+			return nil, err
+		}
+		log.Println("Created MinIO bucket named", bucketName)
+
+		// Allow anonymous read-only access
+		policy := fmt.Sprintf(`{
+			"Version": "2012-10-17",
+			"Statement": [
+				{
+					"Effect": "Allow",
+					"Principal": "*",
+					"Action": ["s3:GetObject"],
+					"Resource": ["arn:aws:s3:::%s/*"]
+				}
+			]
+		}`, bucketName)
+
+		err = minioClient.SetBucketPolicy(ctx, bucketName, policy)
+		if err != nil {
+			return nil, fmt.Errorf("failed to set bucket policy: %w", err)
+		}
+		log.Println("Set public read policy for bucket", bucketName)
+	} else {
+		log.Println("Found existing MinIO bucket with name", bucketName)
+	}
+
+	return minioClient, nil
 }

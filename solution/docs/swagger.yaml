@@ -26,6 +26,8 @@ definitions:
         type: integer
       impressions_limit:
         type: integer
+      picture:
+        type: string
       start_date:
         type: integer
       targeting:
@@ -308,6 +310,47 @@ paths:
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
       summary: Обновление кампании
+      tags:
+      - Campaigns
+  /advertisers/{advertiserId}/campaigns/{campaignId}/picture:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Добавляет/обновляет изображение рекламной кампании
+      parameters:
+      - description: UUID рекламодателя
+        in: path
+        name: advertiserId
+        required: true
+        type: string
+      - description: UUID рекламной кампании
+        in: path
+        name: campaignId
+        required: true
+        type: string
+      - description: Файл изображения для загрузки
+        in: formData
+        name: uploadfile
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Добавление картинки к рекламной кампании
       tags:
       - Campaigns
   /advertisers/bulk:

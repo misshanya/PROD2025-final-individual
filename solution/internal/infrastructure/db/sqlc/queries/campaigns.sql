@@ -28,6 +28,17 @@ INSERT INTO campaigns_targeting (
 )
 RETURNING *;
 
+-- name: SetCampaignPicture :exec
+UPDATE campaigns
+SET
+    pic_id = @picture_id::varchar
+WHERE
+    id = @campaign_id::uuid;
+
+-- name: GetCampaignPicID :one
+SELECT pic_id FROM campaigns
+WHERE id = @campaign_id::uuid; 
+
 -- name: GetCampaignsWithTargetingByAdvertiserID :many
 SELECT * FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
 WHERE advertiser_id = @advertiser_id::uuid

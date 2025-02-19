@@ -3,25 +3,39 @@ package app
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/domain"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/repository"
 )
 
 type CampaignService struct {
-	repo          repository.CampaignRepository
-	timeRepo      repository.TimeRepository
-	openAIService domain.MLService
-	mlRepository  repository.MLRepository
+	repo            repository.CampaignRepository
+	advertiserRepo  repository.AdvertiserRepository
+	timeRepo        repository.TimeRepository
+	openAIService   domain.MLService
+	mlRepository    repository.MLRepository
+	fileRepo        repository.FileRepository
+	minioPublicHost string
 }
 
-func NewCampaignService(repo repository.CampaignRepository, timeRepo repository.TimeRepository, openAIService domain.MLService, mlRepository repository.MLRepository) *CampaignService {
+func NewCampaignService(repo repository.CampaignRepository,
+	advertiserRepo repository.AdvertiserRepository,
+	timeRepo repository.TimeRepository,
+	openAIService domain.MLService,
+	mlRepository repository.MLRepository,
+	fileRepo repository.FileRepository,
+	minioPublicHost string) *CampaignService {
 	return &CampaignService{
-		repo:          repo,
-		timeRepo:      timeRepo,
-		openAIService: openAIService,
-		mlRepository:  mlRepository,
+		repo:            repo,
+		advertiserRepo:  advertiserRepo,
+		timeRepo:        timeRepo,
+		openAIService:   openAIService,
+		mlRepository:    mlRepository,
+		fileRepo:        fileRepo,
+		minioPublicHost: minioPublicHost,
 	}
 }
 
@@ -52,11 +66,48 @@ func (s *CampaignService) CreateCampaign(ctx context.Context, advertiserID uuid.
 	return campaign, nil
 }
 
+func (s *CampaignService) SetCampaignPicture(ctx context.Context,
+	advertiserID, campaignID uuid.UUID,
+	fileName string,
+	fileContent []byte) error {
+	_, err := s.advertiserRepo.GetByID(ctx, advertiserID)
+	if err == pgx.ErrNoRows {
+		return domain.ErrAdvertiserNotFound
+	}
+	_, err = s.repo.GetCampaignByID(ctx, campaignID)
+	if err == pgx.ErrNoRows {
+		return domain.ErrAdNotFound
+	}
+
+	// Generate file key
+	id := uuid.New().String()
+	ext := filepath.Ext(fileName)
+	fileKey := id + ext
+
+	err = s.fileRepo.UploadFile(ctx, fileKey, fileContent)
+	if err != nil {
+		return err
+	}
+
+	return s.repo.SetCampaignPicture(ctx, campaignID, fileKey)
+}
+
 func (s *CampaignService) GetCampaignsByAdvertiserID(ctx context.Context, advertiserID uuid.UUID, size, page int) ([]domain.Campaign, error) {
 	offset := size * page
 	campaigns, err := s.repo.GetCampaignsByAdvertiserID(ctx, advertiserID, size, offset)
 	if err != nil {
 		return []domain.Campaign{}, err
+	}
+	for i := range campaigns {
+		picID, err := s.repo.GetCampaignPicID(ctx, campaigns[i].ID)
+		if err != nil || picID == "" {
+			continue
+		}
+		picURL, err := s.fileRepo.GetFileLink(ctx, picID, s.minioPublicHost)
+		if err != nil || picURL == "" {
+			continue
+		}
+		campaigns[i].PicURL = &picURL
 	}
 	return campaigns, nil
 }
@@ -66,6 +117,15 @@ func (s *CampaignService) GetCampaignByID(ctx context.Context, campaignID uuid.U
 	if err != nil {
 		return nil, err
 	}
+	picID, err := s.repo.GetCampaignPicID(ctx, campaignID)
+	if err != nil || picID == "" {
+		return campaign, nil
+	}
+	picURL, err := s.fileRepo.GetFileLink(ctx, picID, s.minioPublicHost)
+	if err != nil || picURL == "" {
+		return campaign, nil
+	}
+	campaign.PicURL = &picURL
 	return campaign, nil
 }
 
@@ -93,6 +153,15 @@ func (s *CampaignService) UpdateCampaign(ctx context.Context, campaignID uuid.UU
 	if err != nil {
 		return nil, err
 	}
+	picID, err := s.repo.GetCampaignPicID(ctx, campaignID)
+	if err != nil || picID == "" {
+		return campaign, nil
+	}
+	picURL, err := s.fileRepo.GetFileLink(ctx, picID, s.minioPublicHost)
+	if err != nil || picURL == "" {
+		return campaign, nil
+	}
+	campaign.PicURL = &picURL
 	return campaign, nil
 }
 

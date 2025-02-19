@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -32,8 +34,8 @@ func NewCampaignHandler(service *app.CampaignService) *CampaignHandler {
 //	@Param			advertiserId	path	string					true	"Advertiser ID"
 //	@Produce		json
 //	@Success		200	{object}	domain.Campaign
-//	@Failure		400	{object} ErrorResponse
-//	@Failure		500	{object} ErrorResponse
+//	@Failure		400	{object}	ErrorResponse
+//	@Failure		500	{object}	ErrorResponse
 //	@Router			/advertisers/{advertiserId}/campaigns [post]
 func (h *CampaignHandler) CreateCampaign(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -67,6 +69,65 @@ func (h *CampaignHandler) CreateCampaign(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(campaign)
 }
 
+// SetCampaignPicture godoc
+//
+//	@Summary		Добавление картинки к рекламной кампании
+//	@Description	Добавляет/обновляет изображение рекламной кампании
+//	@Tags			Campaigns
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			advertiserId	path		string	true	"UUID рекламодателя"
+//	@Param			campaignId		path		string	true	"UUID рекламной кампании"
+//	@Param			uploadfile		formData	file	true	"Файл изображения для загрузки"
+//	@Success		200
+//	@Failure		400	{object}	ErrorResponse
+//	@Failure		404	{object}	ErrorResponse
+//	@Failure		500	{object}	ErrorResponse
+//	@Router			/advertisers/{advertiserId}/campaigns/{campaignId}/picture [post]
+func (h *CampaignHandler) SetCampaignPicture(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	advertiserID, err := uuid.Parse(chi.URLParam(r, "advertiserId"))
+	if err != nil {
+		WriteError(w, http.StatusBadRequest, "Некорректный запрос", "невалидный ID рекламодателя")
+		return
+	}
+
+	campaignID, err := uuid.Parse(chi.URLParam(r, "campaignId"))
+	if err != nil {
+		WriteError(w, http.StatusBadRequest, "Некорректный запрос", "невалидный ID рекламной кампании")
+		return
+	}
+
+	file, handler, err := r.FormFile("uploadfile")
+	if err != nil {
+		log.Printf("Failed to retrieve file: %v", err)
+		WriteError(w, http.StatusBadRequest, "Ошибка получения файла", "")
+		return
+	}
+	defer file.Close()
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		WriteError(w, http.StatusBadRequest, "Ошибка получения файла", "некорректный файл")
+		return
+	}
+
+	err = h.service.SetCampaignPicture(ctx, advertiserID, campaignID, handler.Filename, fileBytes)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrAdvertiserNotFound):
+			WriteError(w, http.StatusNotFound, "Рекламодатель не найден", "")
+		case errors.Is(err, domain.ErrAdNotFound):
+			WriteError(w, http.StatusNotFound, "Рекламная кампания не найдена", "")
+		default:
+			log.Printf("[INTERNAL ERROR] failed to set campaign picture: %v", err)
+			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
+		}
+		return
+	}
+}
+
 // GetCampaignsByAdvertiserID godoc
 //
 //	@Summary		Получение кампаний рекламодателя
@@ -75,8 +136,8 @@ func (h *CampaignHandler) CreateCampaign(w http.ResponseWriter, r *http.Request)
 //	@Produce		json
 //	@Param			advertiserId	path		string	true	"ID рекламодателя"
 //	@Success		200				{object}	[]domain.Campaign
-//	@Failure		400				{object} ErrorResponse
-//	@Failure		500				{object} ErrorResponse
+//	@Failure		400				{object}	ErrorResponse
+//	@Failure		500				{object}	ErrorResponse
 //	@Router			/advertisers/{advertiserId}/campaigns [get]
 func (h *CampaignHandler) GetCampaignsByAdvertiserID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -129,9 +190,9 @@ func (h *CampaignHandler) GetCampaignsByAdvertiserID(w http.ResponseWriter, r *h
 //	@Tags			Campaigns
 //	@Produce		json
 //	@Success		200	{object}	domain.Campaign
-//	@Failure		400 {object} ErrorResponse
-//	@Failure		404 {object} ErrorResponse
-//	@Failure		500	{object} ErrorResponse
+//	@Failure		400	{object}	ErrorResponse
+//	@Failure		404	{object}	ErrorResponse
+//	@Failure		500	{object}	ErrorResponse
 //	@Router			/advertisers/{advertiserId}/campaigns/{campaignId} [get]
 func (h *CampaignHandler) GetCampaignByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -172,9 +233,9 @@ func (h *CampaignHandler) GetCampaignByID(w http.ResponseWriter, r *http.Request
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	domain.Campaign
-//	@Failure		400	{object} ErrorResponse
-//	@Failure		400	{object} ErrorResponse
-//	@Failure		500	{object} ErrorResponse
+//	@Failure		400	{object}	ErrorResponse
+//	@Failure		400	{object}	ErrorResponse
+//	@Failure		500	{object}	ErrorResponse
 //	@Router			/advertisers/{advertiserId}/campaigns/{campaignId} [put]
 func (h *CampaignHandler) UpdateCampaign(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -219,7 +280,7 @@ func (h *CampaignHandler) UpdateCampaign(w http.ResponseWriter, r *http.Request)
 //	@Description	Удаляет рекламную кампанию по ее ID
 //	@Tags			Campaigns
 //	@Success		204
-//	@Failure		500	{object} ErrorResponse
+//	@Failure		500	{object}	ErrorResponse
 //	@Router			/advertisers/{advertiserId}/campaigns/{campaignId} [delete]
 func (h *CampaignHandler) DeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -255,8 +316,8 @@ func (h *CampaignHandler) DeleteCampaign(w http.ResponseWriter, r *http.Request)
 //	@Param			data	body	domain.GenerateAdTextRequest	true	"Информация для генерации текста"
 //	@Produce		json
 //	@Success		200	{object}	domain.GenerateAdTextResponse
-//	@Failure		400	{object} ErrorResponse
-//	@Failure		500	{object} ErrorResponse
+//	@Failure		400	{object}	ErrorResponse
+//	@Failure		500	{object}	ErrorResponse
 //	@Router			/advertisers/campaigns/generate [post]
 func (h *CampaignHandler) GenerateAdText(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -289,7 +350,7 @@ func (h *CampaignHandler) GenerateAdText(w http.ResponseWriter, r *http.Request)
 //	@Tags			Campaigns
 //	@Produce		json
 //	@Success		200	{object}	domain.SwitchModerationResponse
-//	@Failure		500	{object} ErrorResponse
+//	@Failure		500	{object}	ErrorResponse
 //	@Router			/advertisers/campaigns/moderation [patch]
 func (h *CampaignHandler) SwitchModeration(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
