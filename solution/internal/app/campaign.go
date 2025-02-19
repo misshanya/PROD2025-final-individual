@@ -40,13 +40,18 @@ func NewCampaignService(repo repository.CampaignRepository,
 }
 
 func (s *CampaignService) CreateCampaign(ctx context.Context, advertiserID uuid.UUID, campaignRequest *domain.CampaignRequest) (*domain.Campaign, error) {
+	// Check if advertiser exists
 	_, err := s.advertiserRepo.GetByID(ctx, advertiserID)
 	if err != nil {
 		return nil, domain.ErrAdvertiserNotFound
 	}
+
+	// Validate gender
 	if campaignRequest.Targeting.Gender != nil && !isValidGender(*campaignRequest.Targeting.Gender) {
 		return nil, domain.ErrBadRequest
 	}
+
+	// Check if moderation is turned on
 	isModerated, err := s.checkModeration(ctx)
 	if err != nil {
 		return nil, err
@@ -110,15 +115,11 @@ func (s *CampaignService) GetCampaignsByAdvertiserID(ctx context.Context, advert
 		return []domain.Campaign{}, err
 	}
 	for i := range campaigns {
-		picID, err := s.repo.GetCampaignPicID(ctx, campaigns[i].ID)
-		if err != nil || picID == "" {
-			continue
+		picURL, err := s.getPicURL(ctx, campaigns[i].ID)
+		if err == nil {
+			// Set campaign pic url
+			campaigns[i].PicURL = &picURL
 		}
-		picURL, err := s.fileRepo.GetFileLink(ctx, picID, s.minioPublicHost)
-		if err != nil || picURL == "" {
-			continue
-		}
-		campaigns[i].PicURL = &picURL
 	}
 	return campaigns, nil
 }
@@ -132,30 +133,32 @@ func (s *CampaignService) GetCampaignByID(ctx context.Context, advertiserID, cam
 	if err == pgx.ErrNoRows {
 		return nil, domain.ErrAdNotFound
 	}
-	picID, err := s.repo.GetCampaignPicID(ctx, campaignID)
-	if err != nil || picID == "" {
-		return campaign, nil
+	picURL, err := s.getPicURL(ctx, campaignID)
+	if err == nil {
+		// Set campaign pic url
+		campaign.PicURL = &picURL
 	}
-	picURL, err := s.fileRepo.GetFileLink(ctx, picID, s.minioPublicHost)
-	if err != nil || picURL == "" {
-		return campaign, nil
-	}
-	campaign.PicURL = &picURL
 	return campaign, nil
 }
 
 func (s *CampaignService) UpdateCampaign(ctx context.Context, advertiserID, campaignID uuid.UUID, campaignUpdate domain.CampaignUpdateRequest) (*domain.Campaign, error) {
+	// Check if advertiser exists
 	_, err := s.advertiserRepo.GetByID(ctx, advertiserID)
 	if err != nil {
 		return nil, domain.ErrAdvertiserNotFound
 	}
+	// Check if campaign exists
 	_, err = s.repo.GetCampaignByID(ctx, campaignID)
 	if err == pgx.ErrNoRows {
 		return nil, domain.ErrAdNotFound
 	}
+
+	// Validate gender
 	if campaignUpdate.Targeting.Gender != nil && !isValidGender(*campaignUpdate.Targeting.Gender) {
 		return nil, domain.ErrBadRequest
 	}
+
+	// Check if moderation is turned on
 	isModerated, err := s.checkModeration(ctx)
 	if err != nil {
 		return nil, err
@@ -171,23 +174,24 @@ func (s *CampaignService) UpdateCampaign(ctx context.Context, advertiserID, camp
 			return nil, domain.ErrModerationNotPassed
 		}
 	}
+
+	// Get current day
 	currentDate, err := s.timeRepo.GetCurrentDate(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	campaign, err := s.repo.UpdateCampaign(ctx, campaignID, campaignUpdate, *currentDate)
 	if err != nil {
 		return nil, err
 	}
-	picID, err := s.repo.GetCampaignPicID(ctx, campaignID)
-	if err != nil || picID == "" {
-		return campaign, nil
+
+	picURL, err := s.getPicURL(ctx, campaignID)
+	if err == nil {
+		// Set campaign pic url
+		campaign.PicURL = &picURL
 	}
-	picURL, err := s.fileRepo.GetFileLink(ctx, picID, s.minioPublicHost)
-	if err != nil || picURL == "" {
-		return campaign, nil
-	}
-	campaign.PicURL = &picURL
+
 	return campaign, nil
 }
 
@@ -202,10 +206,12 @@ func isValidGender(gender string) bool {
 }
 
 func (s *CampaignService) DeleteCampaign(ctx context.Context, advertiserID, campaignID uuid.UUID) error {
+	// Check if advertiser exists
 	_, err := s.advertiserRepo.GetByID(ctx, advertiserID)
 	if err != nil {
 		return domain.ErrAdvertiserNotFound
 	}
+	// Check if campaign exists
 	_, err = s.repo.GetCampaignByID(ctx, campaignID)
 	if err == pgx.ErrNoRows {
 		return domain.ErrAdNotFound
@@ -225,4 +231,15 @@ func (s *CampaignService) SwitchModeration(ctx context.Context) (bool, error) {
 
 func (s *CampaignService) checkModeration(ctx context.Context) (bool, error) {
 	return s.mlRepository.CheckModeration(ctx)
+}
+
+func (s *CampaignService) getPicURL(ctx context.Context, campaignID uuid.UUID) (string, error) {
+	// Get picture id from db
+	picID, err := s.repo.GetCampaignPicID(ctx, campaignID)
+	if err != nil || picID == "" {
+		return "", nil
+	}
+
+	// Generate picture URL and return
+	return s.fileRepo.GetFileLink(ctx, picID, s.minioPublicHost)
 }
