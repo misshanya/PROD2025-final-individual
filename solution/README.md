@@ -42,6 +42,7 @@ MINIO_ENDPOINT - Адрес MinIO в формате host:port. Например,
 MINIO_ACCESS_KEY_ID - Юзер MinIO. Например, admin
 MINIO_SECRET_ACCESS_KEY - Пароль юзера MinIO. Например, admin123
 MINIO_BUCKET - Бакет MinIO. Если не задан, используется бакет по умолчанию: proood
+MINIO_PUB_HOST - Публичный адрес MinIO. Используется для создания ссылки на картинку кампании. По умолчанию localhost:9000
 ```
 
 ### AI
