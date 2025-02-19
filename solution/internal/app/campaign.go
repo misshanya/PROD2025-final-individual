@@ -44,6 +44,9 @@ func (s *CampaignService) CreateCampaign(ctx context.Context, advertiserID uuid.
 	if err != nil {
 		return nil, domain.ErrAdvertiserNotFound
 	}
+	if campaignRequest.Targeting.Gender != nil && !isValidGender(*campaignRequest.Targeting.Gender) {
+		return nil, domain.ErrBadRequest
+	}
 	isModerated, err := s.checkModeration(ctx)
 	if err != nil {
 		return nil, err
@@ -150,6 +153,9 @@ func (s *CampaignService) UpdateCampaign(ctx context.Context, advertiserID, camp
 	if err == pgx.ErrNoRows {
 		return nil, domain.ErrAdNotFound
 	}
+	if campaignUpdate.Targeting.Gender != nil && !isValidGender(*campaignUpdate.Targeting.Gender) {
+		return nil, domain.ErrBadRequest
+	}
 	isModerated, err := s.checkModeration(ctx)
 	if err != nil {
 		return nil, err
@@ -183,6 +189,16 @@ func (s *CampaignService) UpdateCampaign(ctx context.Context, advertiserID, camp
 	}
 	campaign.PicURL = &picURL
 	return campaign, nil
+}
+
+func isValidGender(gender string) bool {
+	validGenders := map[string]struct{}{
+		"MALE":   {},
+		"FEMALE": {},
+		"ALL":    {},
+	}
+	_, exists := validGenders[gender]
+	return exists
 }
 
 func (s *CampaignService) DeleteCampaign(ctx context.Context, advertiserID, campaignID uuid.UUID) error {

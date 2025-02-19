@@ -280,6 +280,8 @@ func (h *CampaignHandler) UpdateCampaign(w http.ResponseWriter, r *http.Request)
 			WriteError(w, http.StatusNotFound, "Рекламная кампания не найдена", "")
 		case errors.Is(err, domain.ErrModerationNotPassed):
 			WriteError(w, http.StatusBadRequest, "Некорректный запрос", "модерация не пройдена")
+		case errors.Is(err, domain.ErrBadRequest):
+			WriteError(w, http.StatusBadRequest, "Некорректный запрос", err.Error())
 		default:
 			log.Printf("[INTERNAL ERROR] failed to update campaign: %v", err)
 			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
