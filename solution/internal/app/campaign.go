@@ -49,7 +49,7 @@ func (s *CampaignService) CreateCampaign(ctx context.Context, advertiserID uuid.
 	}
 
 	// Validate targeting
-	if !s.validateTargeting(campaignRequest.Targeting) {
+	if !validateTargeting(campaignRequest.Targeting) {
 		return nil, domain.ErrBadRequest
 	}
 
@@ -156,7 +156,7 @@ func (s *CampaignService) UpdateCampaign(ctx context.Context, advertiserID, camp
 	}
 
 	// Validate targeting
-	if !s.validateTargeting(campaignUpdate.Targeting) {
+	if !validateTargeting(campaignUpdate.Targeting) {
 		return nil, domain.ErrBadRequest
 	}
 
@@ -236,7 +236,7 @@ func (s *CampaignService) getPicURL(ctx context.Context, campaignID uuid.UUID) (
 	return s.fileRepo.GetFileLink(ctx, picID, s.minioPublicHost)
 }
 
-func (s *CampaignService) validateTargeting(targeting domain.Targeting) bool {
+func validateTargeting(targeting domain.Targeting) bool {
 	if targeting.AgeFrom != nil && *targeting.AgeFrom <= 0 {
 		return false
 	}
