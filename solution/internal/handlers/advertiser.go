@@ -78,11 +78,11 @@ func (h *AdvertiserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		switch err {
 		case domain.ErrAdvertiserNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-			return
 		default:
 			log.Printf("[INTERNAL ERROR] failed to get advertiser: %v", err)
 			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
 		}
+		return
 	}
 
 	json.NewEncoder(w).Encode(advertiser)
