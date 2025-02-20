@@ -23,6 +23,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
 
     restart: unless-stopped
 
@@ -66,6 +70,11 @@ services:
     networks:
       - prod-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   minio:
     image: quay.io/minio/minio
@@ -81,6 +90,11 @@ services:
       - minio_data:/data
     networks:
       - prod-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
 networks:
   prod-network:
