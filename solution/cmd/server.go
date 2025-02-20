@@ -23,6 +23,7 @@ import (
 
 type Server struct {
 	httpServer *http.Server
+	db         *pgxpool.Pool
 }
 
 func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
@@ -31,7 +32,6 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
 
 	// Init SQL queries
 	queries := storage.New(conn)
@@ -146,6 +146,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 			Addr:    cfg.ServerAddress,
 			Handler: r,
 		},
+		db: conn,
 	}, nil
 
 }

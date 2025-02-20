@@ -45,4 +45,6 @@ func main() {
 	if err := server.httpServer.Shutdown(ctx); err != nil {
 		log.Fatalf("Failed to shutdown: %v", err)
 	}
+
+	server.db.Close()
 }
