@@ -11,6 +11,7 @@ import (
 
 	_ "gitlab.prodcontest.ru/2025-final-projects-back/misshanya/docs"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/config"
+	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/server"
 )
 
 // @title			PROD Backend 2025 Advertising Platform API
@@ -22,14 +23,14 @@ func main() {
 
 	ctx := context.Background()
 
-	server, err := NewServer(ctx, cfg)
+	server, err := server.NewServer(ctx, cfg)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	go func() {
 		log.Printf("Starting server on %s", cfg.ServerAddress)
-		if err := server.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.HttpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("failed to start server: %v", err)
 		}
 	}()
@@ -42,9 +43,9 @@ func main() {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := server.httpServer.Shutdown(ctx); err != nil {
+	if err := server.HttpServer.Shutdown(ctx); err != nil {
 		log.Fatalf("Failed to shutdown: %v", err)
 	}
 
-	server.db.Close()
+	server.DB.Close()
 }

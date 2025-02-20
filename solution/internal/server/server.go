@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"context"
@@ -22,8 +22,8 @@ import (
 )
 
 type Server struct {
-	httpServer *http.Server
-	db         *pgxpool.Pool
+	HttpServer *http.Server
+	DB         *pgxpool.Pool
 }
 
 func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
@@ -142,11 +142,11 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	r.Post("/time/advance", timeHandler.SetCurrentDate)
 
 	return &Server{
-		httpServer: &http.Server{
+		HttpServer: &http.Server{
 			Addr:    cfg.ServerAddress,
 			Handler: r,
 		},
-		db: conn,
+		DB: conn,
 	}, nil
 
 }
