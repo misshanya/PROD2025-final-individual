@@ -15,6 +15,8 @@ services:
       - MINIO_ACCESS_KEY_ID=admin
       - MINIO_SECRET_ACCESS_KEY=admin123
       - MINIO_BUCKET=
+      - AI_MODERATION_MODEL=qwen2.5:3b
+      - AI_GENERATION_MODEL=qwen2.5:3b
     ports:
       - 8080:8080
 

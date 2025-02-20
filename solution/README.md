@@ -38,6 +38,8 @@ REDIS_PASSWORD - Пароль Redis (если нужен)
 REDIS_DB - База данных Redis
 OPENAI_BASE_URL - Адрес Ollama или другого OpenAI-совместимого API для модерации и генерации текста. Например, http://ollama-host:11434/v1/
 OPENAI_API_KEY - API ключ для Ollama/OpenAI (по умолчанию для Ollama не нужен)
+AI_MODERATION_MODEL - Модель для модерации. По умолчанию: qwen2.5:3b
+AI_GENERATION_MODEL - Модель для генерации текстов кампаний. По умолчанию: qwen2.5:3b
 MINIO_ENDPOINT - Адрес MinIO в формате host:port. Например, minio:9000
 MINIO_ACCESS_KEY_ID - Юзер MinIO. Например, admin
 MINIO_SECRET_ACCESS_KEY - Пароль юзера MinIO. Например, admin123

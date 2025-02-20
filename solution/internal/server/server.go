@@ -63,7 +63,12 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	fileRepo := repository.NewFileRepository(minioClient, cfg.MinIO.BucketName)
 
 	// Init OpenAI service
-	openAIService := ml.NewOpenAIService(cfg.OpenAI.BaseURL, cfg.OpenAI.ApiKey)
+	openAIService := ml.NewOpenAIService(
+		cfg.OpenAI.BaseURL,
+		cfg.OpenAI.ApiKey,
+		cfg.OpenAI.ModerationModel,
+		cfg.OpenAI.GenerationModel,
+	)
 
 	// Init ML repository
 	mlRepo := repository.NewMLRepository(rdb)

@@ -23,8 +23,10 @@ type RedisConfig struct {
 }
 
 type OpenAIConfig struct {
-	BaseURL string
-	ApiKey  string
+	BaseURL         string
+	ApiKey          string
+	ModerationModel string
+	GenerationModel string
 }
 
 type MinIOConfig struct {
@@ -110,6 +112,18 @@ func NewConfig() *Config {
 		minioPublicHost = "localhost:9000"
 	}
 
+	aiModerationModel := os.Getenv("AI_MODERATION_MODEL")
+	if aiModerationModel == "" {
+		log.Println("AI Moderation model unset, using default (qwen2.5:3b)")
+		aiModerationModel = "qwen2.5:3b"
+	}
+
+	aiGenerationModel := os.Getenv("AI_GENERATION_MODEL")
+	if aiGenerationModel == "" {
+		log.Println("AI Generation model unset, using default (qwen2.5:3b)")
+		aiGenerationModel = "qwen2.5:3b"
+	}
+
 	return &Config{
 		DatabaseURL:   dbURL,
 		ServerAddress: serverAddress,
@@ -119,8 +133,10 @@ func NewConfig() *Config {
 			DB:       redisDB,
 		},
 		OpenAI: OpenAIConfig{
-			BaseURL: openAIBaseURL,
-			ApiKey:  openAIApiKey,
+			BaseURL:         openAIBaseURL,
+			ApiKey:          openAIApiKey,
+			ModerationModel: aiModerationModel,
+			GenerationModel: aiGenerationModel,
 		},
 		MinIO: MinIOConfig{
 			Endpoint:        minioEndpoint,
