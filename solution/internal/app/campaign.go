@@ -141,6 +141,8 @@ func (s *CampaignService) UpdateCampaign(ctx context.Context, advertiserID, camp
 	_, err = s.repo.GetCampaignByID(ctx, campaignID)
 	if err == pgx.ErrNoRows {
 		return nil, domain.ErrAdNotFound
+	} else if err != nil {
+		return nil, err
 	}
 
 	// Validate targeting

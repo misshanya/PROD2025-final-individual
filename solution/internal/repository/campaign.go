@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/domain"
@@ -165,9 +164,7 @@ func (r *CampaignRepository) GetCampaignPicID(ctx context.Context, campaignID uu
 
 func (r *CampaignRepository) GetCampaignByID(ctx context.Context, campaignID uuid.UUID) (*domain.Campaign, error) {
 	campaignDB, err := r.queries.GetCampaignWithTargetingByID(ctx, campaignID)
-	if err == pgx.ErrNoRows {
-		return nil, domain.ErrNotFound
-	} else if err != nil {
+	if err != nil {
 		return nil, err
 	}
 
