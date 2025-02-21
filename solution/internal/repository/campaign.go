@@ -27,10 +27,14 @@ func NewCampaignRepository(queries *storage.Queries, dbConn *pgxpool.Pool) *Camp
 
 func (r *CampaignRepository) CreateCampaign(ctx context.Context, advertiserID uuid.UUID, campaignRequest *domain.CampaignRequest, currentDate int) (*domain.Campaign, error) {
 	// Convert cost per impression and cost per click to pgtype.Numeric
-	var costPerImpression pgtype.Numeric
-	var costPerClick pgtype.Numeric
-	costPerImpression.Scan(strconv.FormatFloat(campaignRequest.CostPerImpression, 'f', -1, 64))
-	costPerClick.Scan(strconv.FormatFloat(campaignRequest.CostPerClick, 'f', -1, 64))
+	costPerImpression, err := convertCostToNumeric(campaignRequest.CostPerImpression)
+	if err != nil {
+		return nil, err
+	}
+	costPerClick, err := convertCostToNumeric(campaignRequest.CostPerClick)
+	if err != nil {
+		return nil, err
+	}
 
 	if campaignRequest.StartDate < int32(currentDate) || campaignRequest.EndDate < int32(currentDate) || campaignRequest.EndDate < campaignRequest.StartDate {
 		return nil, domain.ErrBadRequest
@@ -59,22 +63,8 @@ func (r *CampaignRepository) CreateCampaign(ctx context.Context, advertiserID uu
 		return nil, err
 	}
 
-	createCampaignTargetingParams := storage.CreateCampaignTargetingParams{
-		CampaignID: campaignDB.ID,
-	}
-
-	if campaignRequest.Targeting.Gender != nil {
-		createCampaignTargetingParams.Gender = pgtype.Text{String: *campaignRequest.Targeting.Gender, Valid: true}
-	}
-	if campaignRequest.Targeting.AgeFrom != nil {
-		createCampaignTargetingParams.AgeFrom = pgtype.Int4{Int32: *campaignRequest.Targeting.AgeFrom, Valid: true}
-	}
-	if campaignRequest.Targeting.AgeTo != nil {
-		createCampaignTargetingParams.AgeTo = pgtype.Int4{Int32: *campaignRequest.Targeting.AgeTo, Valid: true}
-	}
-	if campaignRequest.Targeting.Location != nil {
-		createCampaignTargetingParams.Location = pgtype.Text{String: *campaignRequest.Targeting.Location, Valid: true}
-	}
+	createCampaignTargetingParams := buildCampaignTargetingParams(campaignRequest.Targeting)
+	createCampaignTargetingParams.CampaignID = campaignDB.ID
 
 	targetingDB, err := qtx.CreateCampaignTargeting(ctx, createCampaignTargetingParams)
 	if err != nil {
@@ -82,20 +72,6 @@ func (r *CampaignRepository) CreateCampaign(ctx context.Context, advertiserID uu
 	}
 	tx.Commit(ctx)
 
-	// Convert db responses to my structures
-	targeting := domain.Targeting{}
-	if targetingDB.Gender.Valid {
-		targeting.Gender = &targetingDB.Gender.String
-	}
-	if targetingDB.AgeFrom.Valid {
-		targeting.AgeFrom = &targetingDB.AgeFrom.Int32
-	}
-	if targetingDB.AgeTo.Valid {
-		targeting.AgeTo = &targetingDB.AgeTo.Int32
-	}
-	if targetingDB.Location.Valid {
-		targeting.Location = &targetingDB.Location.String
-	}
 	campaign := domain.Campaign{
 		ID:                campaignDB.ID,
 		AdvertiserID:      campaignDB.AdvertiserID,
@@ -107,7 +83,7 @@ func (r *CampaignRepository) CreateCampaign(ctx context.Context, advertiserID uu
 		AdText:            campaignDB.AdText,
 		StartDate:         campaignDB.StartDate,
 		EndDate:           campaignDB.EndDate,
-		Targeting:         targeting,
+		Targeting:         convertDBTargetingToDomain(targetingDB),
 	}
 	return &campaign, nil
 }
@@ -242,10 +218,14 @@ func (r *CampaignRepository) GetCampaignByID(ctx context.Context, campaignID uui
 
 func (r *CampaignRepository) UpdateCampaign(ctx context.Context, campaignID uuid.UUID, campaignUpdate domain.CampaignUpdateRequest, currentDate int) (*domain.Campaign, error) {
 	// Convert cost per impression and cost per click to pgtype.Numeric
-	var costPerImpression pgtype.Numeric
-	var costPerClick pgtype.Numeric
-	costPerImpression.Scan(strconv.FormatFloat(campaignUpdate.CostPerImpression, 'f', -1, 64))
-	costPerClick.Scan(strconv.FormatFloat(campaignUpdate.CostPerClick, 'f', -1, 64))
+	costPerImpression, err := convertCostToNumeric(campaignUpdate.CostPerImpression)
+	if err != nil {
+		return nil, err
+	}
+	costPerClick, err := convertCostToNumeric(campaignUpdate.CostPerClick)
+	if err != nil {
+		return nil, err
+	}
 
 	var started bool
 	existingCampaignDB, err := r.queries.GetCampaignWithTargetingByID(ctx, campaignID)
@@ -288,22 +268,8 @@ func (r *CampaignRepository) UpdateCampaign(ctx context.Context, campaignID uuid
 		return nil, err
 	}
 
-	updateCampaignTargetingParams := storage.UpdateCampaignTargetingParams{
-		CampaignID: campaignDB.ID,
-	}
-
-	if campaignUpdate.Targeting.Gender != nil {
-		updateCampaignTargetingParams.Gender = pgtype.Text{String: *campaignUpdate.Targeting.Gender, Valid: true}
-	}
-	if campaignUpdate.Targeting.AgeFrom != nil {
-		updateCampaignTargetingParams.AgeFrom = pgtype.Int4{Int32: *campaignUpdate.Targeting.AgeFrom, Valid: true}
-	}
-	if campaignUpdate.Targeting.AgeTo != nil {
-		updateCampaignTargetingParams.AgeTo = pgtype.Int4{Int32: *campaignUpdate.Targeting.AgeTo, Valid: true}
-	}
-	if campaignUpdate.Targeting.Location != nil {
-		updateCampaignTargetingParams.Location = pgtype.Text{String: *campaignUpdate.Targeting.Location, Valid: true}
-	}
+	updateCampaignTargetingParams := buildUpdateCampaignTargetingParams(campaignUpdate.Targeting)
+	updateCampaignTargetingParams.CampaignID = campaignDB.ID
 
 	targetingDB, err := qtx.UpdateCampaignTargeting(ctx, updateCampaignTargetingParams)
 	if err != nil {
@@ -311,7 +277,71 @@ func (r *CampaignRepository) UpdateCampaign(ctx context.Context, campaignID uuid
 	}
 	tx.Commit(ctx)
 
-	// Convert db responses to my structures
+	campaign := domain.Campaign{
+		ID:                campaignDB.ID,
+		AdvertiserID:      campaignDB.AdvertiserID,
+		ImpressionsLimit:  campaignDB.ImpressionsLimit,
+		ClicksLimit:       campaignDB.ClicksLimit,
+		CostPerImpression: campaignUpdate.CostPerImpression,
+		CostPerClick:      campaignUpdate.CostPerClick,
+		AdTitle:           campaignDB.AdTitle,
+		AdText:            campaignDB.AdText,
+		StartDate:         campaignDB.StartDate,
+		EndDate:           campaignDB.EndDate,
+		Targeting:         convertDBTargetingToDomain(targetingDB),
+	}
+	return &campaign, nil
+}
+
+func (r *CampaignRepository) DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error {
+	err := r.queries.DeleteCampaignByID(ctx, campaignID)
+	return err
+}
+
+func convertCostToNumeric(cost float64) (pgtype.Numeric, error) {
+	var num pgtype.Numeric
+	costStr := strconv.FormatFloat(cost, 'f', -1, 64)
+	if err := num.Scan(costStr); err != nil {
+		return num, err
+	}
+	return num, nil
+}
+
+func buildCampaignTargetingParams(targeting domain.Targeting) storage.CreateCampaignTargetingParams {
+	params := storage.CreateCampaignTargetingParams{}
+	if targeting.Gender != nil {
+		params.Gender = pgtype.Text{String: *targeting.Gender, Valid: true}
+	}
+	if targeting.AgeFrom != nil {
+		params.AgeFrom = pgtype.Int4{Int32: *targeting.AgeFrom, Valid: true}
+	}
+	if targeting.AgeTo != nil {
+		params.AgeTo = pgtype.Int4{Int32: *targeting.AgeTo, Valid: true}
+	}
+	if targeting.Location != nil {
+		params.Location = pgtype.Text{String: *targeting.Location, Valid: true}
+	}
+	return params
+}
+
+func buildUpdateCampaignTargetingParams(targeting domain.Targeting) storage.UpdateCampaignTargetingParams {
+	params := storage.UpdateCampaignTargetingParams{}
+	if targeting.Gender != nil {
+		params.Gender = pgtype.Text{String: *targeting.Gender, Valid: true}
+	}
+	if targeting.AgeFrom != nil {
+		params.AgeFrom = pgtype.Int4{Int32: *targeting.AgeFrom, Valid: true}
+	}
+	if targeting.AgeTo != nil {
+		params.AgeTo = pgtype.Int4{Int32: *targeting.AgeTo, Valid: true}
+	}
+	if targeting.Location != nil {
+		params.Location = pgtype.Text{String: *targeting.Location, Valid: true}
+	}
+	return params
+}
+
+func convertDBTargetingToDomain(targetingDB storage.CampaignsTargeting) domain.Targeting {
 	targeting := domain.Targeting{}
 	if targetingDB.Gender.Valid {
 		targeting.Gender = &targetingDB.Gender.String
@@ -325,23 +355,5 @@ func (r *CampaignRepository) UpdateCampaign(ctx context.Context, campaignID uuid
 	if targetingDB.Location.Valid {
 		targeting.Location = &targetingDB.Location.String
 	}
-	campaign := domain.Campaign{
-		ID:                campaignDB.ID,
-		AdvertiserID:      campaignDB.AdvertiserID,
-		ImpressionsLimit:  campaignDB.ImpressionsLimit,
-		ClicksLimit:       campaignDB.ClicksLimit,
-		CostPerImpression: campaignUpdate.CostPerImpression,
-		CostPerClick:      campaignUpdate.CostPerClick,
-		AdTitle:           campaignDB.AdTitle,
-		AdText:            campaignDB.AdText,
-		StartDate:         campaignDB.StartDate,
-		EndDate:           campaignDB.EndDate,
-		Targeting:         targeting,
-	}
-	return &campaign, nil
-}
-
-func (r *CampaignRepository) DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error {
-	err := r.queries.DeleteCampaignByID(ctx, campaignID)
-	return err
+	return targeting
 }
