@@ -74,7 +74,9 @@ DELETE FROM campaigns
 WHERE id = @campaign_id::uuid;
 
 -- name: GetRelativeAd :one
-SELECT * FROM campaigns 
+SELECT *, 
+    (score * cost_per_click + (1 - score) * cost_per_impression) AS expected_revenue
+FROM campaigns 
 JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
 JOIN ml_scores ON campaigns.advertiser_id = ml_scores.advertiser_id
 WHERE 
@@ -99,5 +101,5 @@ WHERE
     ml_scores.client_id = @client_id::uuid AND
     campaigns.start_date <= @cur_date::int AND 
     campaigns.end_date >= @cur_date::int
-ORDER BY score DESC, cost_per_impression DESC
+ORDER BY expected_revenue DESC
 LIMIT 1;
