@@ -256,14 +256,17 @@ func (q *Queries) GetCampaignsWithTargetingByAdvertiserID(ctx context.Context, a
 }
 
 const getRelativeAd = `-- name: GetRelativeAd :one
-SELECT campaigns.id, advertiser_id, impressions_limit, clicks_limit, cost_per_impression, cost_per_click, ad_title, ad_text, start_date, end_date, pic_id, campaigns_targeting.id, campaign_id, gender, age_from, age_to, location FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
+SELECT campaigns.id, campaigns.advertiser_id, impressions_limit, clicks_limit, cost_per_impression, cost_per_click, ad_title, ad_text, start_date, end_date, pic_id, campaigns_targeting.id, campaign_id, gender, age_from, age_to, location, client_id, ml_scores.advertiser_id, score FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
+JOIN ml_scores ON campaigns.advertiser_id = ml_scores.advertiser_id
 WHERE 
     (gender = $1::varchar OR gender = 'ALL' OR gender IS NULL) AND
     (
         ((age_from IS NULL AND age_to >= $2::int) OR (age_to IS NULL AND age_from <= $2::int) OR (age_from IS NULL AND age_to IS NULL)) OR
         (age_from <= $2::int AND age_to >= $2::int)
     ) AND
-    (location IS NULL OR location = $3::varchar)
+    (location IS NULL OR location = $3::varchar) AND
+    ml_scores.client_id = $4::uuid
+ORDER BY score DESC
 LIMIT 1
 `
 
@@ -271,6 +274,7 @@ type GetRelativeAdParams struct {
 	Gender   string
 	Age      int32
 	Location string
+	ClientID uuid.UUID
 }
 
 type GetRelativeAdRow struct {
@@ -291,10 +295,18 @@ type GetRelativeAdRow struct {
 	AgeFrom           pgtype.Int4
 	AgeTo             pgtype.Int4
 	Location          pgtype.Text
+	ClientID          uuid.UUID
+	AdvertiserID_2    uuid.UUID
+	Score             int32
 }
 
 func (q *Queries) GetRelativeAd(ctx context.Context, arg GetRelativeAdParams) (GetRelativeAdRow, error) {
-	row := q.db.QueryRow(ctx, getRelativeAd, arg.Gender, arg.Age, arg.Location)
+	row := q.db.QueryRow(ctx, getRelativeAd,
+		arg.Gender,
+		arg.Age,
+		arg.Location,
+		arg.ClientID,
+	)
 	var i GetRelativeAdRow
 	err := row.Scan(
 		&i.ID,
@@ -314,6 +326,9 @@ func (q *Queries) GetRelativeAd(ctx context.Context, arg GetRelativeAdParams) (G
 		&i.AgeFrom,
 		&i.AgeTo,
 		&i.Location,
+		&i.ClientID,
+		&i.AdvertiserID_2,
+		&i.Score,
 	)
 	return i, err
 }

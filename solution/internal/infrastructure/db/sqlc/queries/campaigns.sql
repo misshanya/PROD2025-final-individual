@@ -75,11 +75,14 @@ WHERE id = @campaign_id::uuid;
 
 -- name: GetRelativeAd :one
 SELECT * FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
+JOIN ml_scores ON campaigns.advertiser_id = ml_scores.advertiser_id
 WHERE 
     (gender = @gender::varchar OR gender = 'ALL' OR gender IS NULL) AND
     (
         ((age_from IS NULL AND age_to >= @age::int) OR (age_to IS NULL AND age_from <= @age::int) OR (age_from IS NULL AND age_to IS NULL)) OR
         (age_from <= @age::int AND age_to >= @age::int)
     ) AND
-    (location IS NULL OR location = @location::varchar)
+    (location IS NULL OR location = @location::varchar) AND
+    ml_scores.client_id = @client_id::uuid
+ORDER BY score DESC
 LIMIT 1;

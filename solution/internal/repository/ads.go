@@ -25,6 +25,7 @@ func (r *AdsRepository) GetRelativeAd(ctx context.Context, clientId uuid.UUID) (
 		return nil, err
 	}
 	ad, err := r.queries.GetRelativeAd(ctx, storage.GetRelativeAdParams{
+		ClientID: clientId,
 		Gender:   client.Gender,
 		Age:      client.Age,
 		Location: client.Location,
