@@ -256,9 +256,7 @@ func (q *Queries) GetCampaignsWithTargetingByAdvertiserID(ctx context.Context, a
 }
 
 const getRelativeAd = `-- name: GetRelativeAd :one
-SELECT campaigns.id, campaigns.advertiser_id, impressions_limit, clicks_limit, cost_per_impression, cost_per_click, ad_title, ad_text, start_date, end_date, pic_id, campaigns_targeting.id, campaign_id, gender, age_from, age_to, location, client_id, ml_scores.advertiser_id, score, 
-    (score * cost_per_click + (1 - score) * cost_per_impression) AS expected_revenue
-FROM campaigns 
+SELECT campaigns.id, campaigns.advertiser_id, impressions_limit, clicks_limit, cost_per_impression, cost_per_click, ad_title, ad_text, start_date, end_date, pic_id, campaigns_targeting.id, campaign_id, gender, age_from, age_to, location, client_id, ml_scores.advertiser_id, score FROM campaigns 
 JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
 JOIN ml_scores ON campaigns.advertiser_id = ml_scores.advertiser_id
 WHERE 
@@ -267,11 +265,6 @@ WHERE
         WHERE impressions.campaign_id = campaigns.id 
           AND impressions.client_id = $1::uuid
     ) AND
-    (
-        SELECT COUNT(*) FROM impressions 
-        WHERE impressions.campaign_id = campaigns.id
-    ) < campaigns.impressions_limit
-    AND
     (gender = $2::varchar OR gender = 'ALL' OR gender IS NULL) AND
     (
         ((age_from IS NULL AND age_to >= $3::int) OR 
@@ -283,7 +276,7 @@ WHERE
     ml_scores.client_id = $1::uuid AND
     campaigns.start_date <= $5::int AND 
     campaigns.end_date >= $5::int
-ORDER BY expected_revenue DESC
+ORDER BY score DESC, cost_per_impression DESC
 LIMIT 1
 `
 
@@ -316,7 +309,6 @@ type GetRelativeAdRow struct {
 	ClientID          uuid.UUID
 	AdvertiserID_2    uuid.UUID
 	Score             int32
-	ExpectedRevenue   int32
 }
 
 func (q *Queries) GetRelativeAd(ctx context.Context, arg GetRelativeAdParams) (GetRelativeAdRow, error) {
@@ -349,7 +341,6 @@ func (q *Queries) GetRelativeAd(ctx context.Context, arg GetRelativeAdParams) (G
 		&i.ClientID,
 		&i.AdvertiserID_2,
 		&i.Score,
-		&i.ExpectedRevenue,
 	)
 	return i, err
 }
