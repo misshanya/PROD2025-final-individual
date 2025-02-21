@@ -106,7 +106,7 @@ func (s *CampaignService) GetCampaignsByAdvertiserID(ctx context.Context, advert
 	}
 	for i := range campaigns {
 		picURL, err := s.getPicURL(ctx, campaigns[i].ID)
-		if err == nil {
+		if err == nil && picURL != "" {
 			// Set campaign pic url
 			campaigns[i].PicURL = &picURL
 		}
@@ -124,7 +124,7 @@ func (s *CampaignService) GetCampaignByID(ctx context.Context, advertiserID, cam
 		return nil, domain.ErrAdNotFound
 	}
 	picURL, err := s.getPicURL(ctx, campaignID)
-	if err == nil {
+	if err == nil && picURL != "" {
 		// Set campaign pic url
 		campaign.PicURL = &picURL
 	}
@@ -166,7 +166,7 @@ func (s *CampaignService) UpdateCampaign(ctx context.Context, advertiserID, camp
 	}
 
 	picURL, err := s.getPicURL(ctx, campaignID)
-	if err == nil {
+	if err == nil && picURL != "" {
 		// Set campaign pic url
 		campaign.PicURL = &picURL
 	}
