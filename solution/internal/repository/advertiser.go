@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -64,7 +63,6 @@ func (r *AdvertiserRepository) CreateMLScore(ctx context.Context, score *domain.
 		AdvertiserID: score.AdvertiserID,
 		Score:        score.Score,
 	})
-	log.Println(err)
 	if err != nil {
 		return err
 	}
@@ -76,7 +74,6 @@ func (r *AdvertiserRepository) GetMLScore(ctx context.Context, clientID, adverti
 		ClientID:     clientID,
 		AdvertiserID: advertiserID,
 	})
-	log.Println(err)
 	if err == nil {
 		return &domain.MLScore{
 			ClientID:     score.ClientID,
@@ -95,7 +92,6 @@ func (r *AdvertiserRepository) UpdateMLScore(ctx context.Context, score *domain.
 		ClientID:     score.ClientID,
 		AdvertiserID: score.AdvertiserID,
 	})
-	log.Println(err)
 	if err != nil {
 		return err
 	}
