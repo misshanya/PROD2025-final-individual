@@ -265,6 +265,11 @@ WHERE
         WHERE impressions.campaign_id = campaigns.id 
           AND impressions.client_id = $1::uuid
     ) AND
+    (
+        SELECT COUNT(*) FROM impressions 
+        WHERE impressions.campaign_id = campaigns.id
+    ) < campaigns.impressions_limit
+    AND
     (gender = $2::varchar OR gender = 'ALL' OR gender IS NULL) AND
     (
         ((age_from IS NULL AND age_to >= $3::int) OR 
