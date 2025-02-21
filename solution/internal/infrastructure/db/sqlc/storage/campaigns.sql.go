@@ -255,6 +255,69 @@ func (q *Queries) GetCampaignsWithTargetingByAdvertiserID(ctx context.Context, a
 	return items, nil
 }
 
+const getRelativeAd = `-- name: GetRelativeAd :one
+SELECT campaigns.id, advertiser_id, impressions_limit, clicks_limit, cost_per_impression, cost_per_click, ad_title, ad_text, start_date, end_date, pic_id, campaigns_targeting.id, campaign_id, gender, age_from, age_to, location FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
+WHERE 
+    (gender = $1::varchar OR gender = 'ALL' OR gender IS NULL) AND
+    (
+        ((age_from IS NULL AND age_to >= $2::int) OR (age_to IS NULL AND age_from <= $2::int) OR (age_from IS NULL AND age_to IS NULL)) OR
+        (age_from <= $2::int AND age_to >= $2::int)
+    ) AND
+    (location IS NULL OR location = $3::varchar)
+LIMIT 1
+`
+
+type GetRelativeAdParams struct {
+	Gender   string
+	Age      int32
+	Location string
+}
+
+type GetRelativeAdRow struct {
+	ID                uuid.UUID
+	AdvertiserID      uuid.UUID
+	ImpressionsLimit  int64
+	ClicksLimit       int64
+	CostPerImpression pgtype.Numeric
+	CostPerClick      pgtype.Numeric
+	AdTitle           string
+	AdText            string
+	StartDate         int32
+	EndDate           int32
+	PicID             pgtype.Text
+	ID_2              uuid.UUID
+	CampaignID        uuid.UUID
+	Gender            pgtype.Text
+	AgeFrom           pgtype.Int4
+	AgeTo             pgtype.Int4
+	Location          pgtype.Text
+}
+
+func (q *Queries) GetRelativeAd(ctx context.Context, arg GetRelativeAdParams) (GetRelativeAdRow, error) {
+	row := q.db.QueryRow(ctx, getRelativeAd, arg.Gender, arg.Age, arg.Location)
+	var i GetRelativeAdRow
+	err := row.Scan(
+		&i.ID,
+		&i.AdvertiserID,
+		&i.ImpressionsLimit,
+		&i.ClicksLimit,
+		&i.CostPerImpression,
+		&i.CostPerClick,
+		&i.AdTitle,
+		&i.AdText,
+		&i.StartDate,
+		&i.EndDate,
+		&i.PicID,
+		&i.ID_2,
+		&i.CampaignID,
+		&i.Gender,
+		&i.AgeFrom,
+		&i.AgeTo,
+		&i.Location,
+	)
+	return i, err
+}
+
 const setCampaignPicture = `-- name: SetCampaignPicture :exec
 UPDATE campaigns
 SET

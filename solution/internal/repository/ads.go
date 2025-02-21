@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/domain"
 	"gitlab.prodcontest.ru/2025-final-projects-back/misshanya/internal/infrastructure/db/sqlc/storage"
 )
 
@@ -16,6 +17,27 @@ func NewAdsRepository(queries *storage.Queries) *AdsRepository {
 	return &AdsRepository{
 		queries: queries,
 	}
+}
+
+func (r *AdsRepository) GetRelativeAd(ctx context.Context, clientId uuid.UUID) (*domain.UserAd, error) {
+	client, err := r.queries.GetUserByID(ctx, clientId)
+	if err != nil {
+		return nil, err
+	}
+	ad, err := r.queries.GetRelativeAd(ctx, storage.GetRelativeAdParams{
+		Gender:   client.Gender,
+		Age:      client.Age,
+		Location: client.Location,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &domain.UserAd{
+		AdId:         ad.ID,
+		AdTitle:      ad.AdTitle,
+		AdText:       ad.AdText,
+		AdvertiserID: ad.AdvertiserID,
+	}, nil
 }
 
 func (r *AdsRepository) Impression(ctx context.Context, adId, clientId uuid.UUID) error {

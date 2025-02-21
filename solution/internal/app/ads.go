@@ -23,6 +23,24 @@ func NewAdsService(repo repository.AdsRepository, userRepo repository.UserReposi
 	}
 }
 
+func (s *AdsService) GetAd(ctx context.Context, clientId uuid.UUID) (*domain.UserAd, error) {
+	_, err := s.userRepo.GetByID(ctx, clientId)
+	if err == pgx.ErrNoRows {
+		return nil, domain.ErrUserNotFound
+	} else if err != nil {
+		return nil, err
+	}
+	ad, err := s.repo.GetRelativeAd(ctx, clientId)
+	if err == pgx.ErrNoRows {
+		return nil, domain.ErrAdNotFound
+	}
+	err = s.repo.Impression(ctx, ad.AdId, clientId)
+	if err != nil {
+		return nil, err
+	}
+	return ad, nil
+}
+
 func (s *AdsService) Click(ctx context.Context, adId, clientId uuid.UUID) error {
 	// Check if user exists
 	_, err := s.userRepo.GetByID(ctx, clientId)

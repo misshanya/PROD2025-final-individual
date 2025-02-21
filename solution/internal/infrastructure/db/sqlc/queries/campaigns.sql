@@ -72,3 +72,14 @@ RETURNING *;
 -- name: DeleteCampaignByID :exec
 DELETE FROM campaigns
 WHERE id = @campaign_id::uuid;
+
+-- name: GetRelativeAd :one
+SELECT * FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
+WHERE 
+    (gender = @gender::varchar OR gender = 'ALL' OR gender IS NULL) AND
+    (
+        ((age_from IS NULL AND age_to >= @age::int) OR (age_to IS NULL AND age_from <= @age::int) OR (age_from IS NULL AND age_to IS NULL)) OR
+        (age_from <= @age::int AND age_to >= @age::int)
+    ) AND
+    (location IS NULL OR location = @location::varchar)
+LIMIT 1;

@@ -22,6 +22,32 @@ func NewAdsHandler(service *app.AdsService) *AdsHandler {
 	}
 }
 
+func (h *AdsHandler) GetAd(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	clientId, err := uuid.Parse(r.URL.Query().Get("client_id"))
+	if err != nil {
+		WriteError(w, http.StatusBadRequest, "Некорректный запрос", "невалидный ID клиента")
+		return
+	}
+
+	ad, err := h.service.GetAd(ctx, clientId)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrUserNotFound):
+			WriteError(w, http.StatusNotFound, "Клиент не найден", "")
+		case errors.Is(err, domain.ErrAdNotFound):
+			WriteError(w, http.StatusNotFound, "Подходящая реклама не найдена", "")
+		default:
+			log.Printf("[INTERNAL ERROR] failed to get ad: %v", err)
+			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
+		}
+		return
+	}
+
+	json.NewEncoder(w).Encode(ad)
+}
+
 // Click godoc
 //
 //	@Summary	Фиксация перехода по рекламному объявлению

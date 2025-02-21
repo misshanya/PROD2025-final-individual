@@ -142,6 +142,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 	r.Patch("/advertisers/campaigns/moderation", campaignHandler.SwitchModeration)
 
+	r.Get("/ads", adsHandler.GetAd)
 	r.Post("/ads/{adId}/click", adsHandler.Click)
 
 	r.Post("/time/advance", timeHandler.SetCurrentDate)
