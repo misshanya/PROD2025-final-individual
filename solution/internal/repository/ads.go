@@ -19,7 +19,7 @@ func NewAdsRepository(queries *storage.Queries) *AdsRepository {
 	}
 }
 
-func (r *AdsRepository) GetRelativeAd(ctx context.Context, clientId uuid.UUID) (*domain.UserAd, error) {
+func (r *AdsRepository) GetRelativeAd(ctx context.Context, clientId uuid.UUID, currentDate int32) (*domain.UserAd, error) {
 	client, err := r.queries.GetUserByID(ctx, clientId)
 	if err != nil {
 		return nil, err
@@ -29,6 +29,7 @@ func (r *AdsRepository) GetRelativeAd(ctx context.Context, clientId uuid.UUID) (
 		Gender:   client.Gender,
 		Age:      client.Age,
 		Location: client.Location,
+		CurDate:  currentDate,
 	})
 	if err != nil {
 		return nil, err

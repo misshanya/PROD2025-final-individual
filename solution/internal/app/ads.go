@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -13,13 +14,18 @@ type AdsService struct {
 	repo         repository.AdsRepository
 	userRepo     repository.UserRepository
 	campaignRepo repository.CampaignRepository
+	timeRepo     repository.TimeRepository
 }
 
-func NewAdsService(repo repository.AdsRepository, userRepo repository.UserRepository, campaignRepo repository.CampaignRepository) *AdsService {
+func NewAdsService(repo repository.AdsRepository,
+	userRepo repository.UserRepository,
+	campaignRepo repository.CampaignRepository,
+	timeRepo repository.TimeRepository) *AdsService {
 	return &AdsService{
 		repo:         repo,
 		userRepo:     userRepo,
 		campaignRepo: campaignRepo,
+		timeRepo:     timeRepo,
 	}
 }
 
@@ -30,7 +36,15 @@ func (s *AdsService) GetAd(ctx context.Context, clientId uuid.UUID) (*domain.Use
 	} else if err != nil {
 		return nil, err
 	}
-	ad, err := s.repo.GetRelativeAd(ctx, clientId)
+
+	// TODO: FIX PANIC!!!!!!!
+	currentDate, err := s.timeRepo.GetCurrentDate(ctx)
+	log.Println(currentDate, err)
+	if err != nil {
+		return nil, err
+	}
+
+	ad, err := s.repo.GetRelativeAd(ctx, clientId, int32(*currentDate))
 	if err == pgx.ErrNoRows {
 		return nil, domain.ErrAdNotFound
 	}

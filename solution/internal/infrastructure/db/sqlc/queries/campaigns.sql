@@ -83,6 +83,8 @@ WHERE
         (age_from <= @age::int AND age_to >= @age::int)
     ) AND
     (location IS NULL OR location = @location::varchar) AND
-    ml_scores.client_id = @client_id::uuid
+    ml_scores.client_id = @client_id::uuid AND
+    campaigns.start_date <= @cur_date::int AND 
+    campaigns.end_date >= @cur_date::int
 ORDER BY score DESC
 LIMIT 1;

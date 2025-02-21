@@ -265,7 +265,9 @@ WHERE
         (age_from <= $2::int AND age_to >= $2::int)
     ) AND
     (location IS NULL OR location = $3::varchar) AND
-    ml_scores.client_id = $4::uuid
+    ml_scores.client_id = $4::uuid AND
+    campaigns.start_date <= $5::int AND 
+    campaigns.end_date >= $5::int
 ORDER BY score DESC
 LIMIT 1
 `
@@ -275,6 +277,7 @@ type GetRelativeAdParams struct {
 	Age      int32
 	Location string
 	ClientID uuid.UUID
+	CurDate  int32
 }
 
 type GetRelativeAdRow struct {
@@ -306,6 +309,7 @@ func (q *Queries) GetRelativeAd(ctx context.Context, arg GetRelativeAdParams) (G
 		arg.Age,
 		arg.Location,
 		arg.ClientID,
+		arg.CurDate,
 	)
 	var i GetRelativeAdRow
 	err := row.Scan(

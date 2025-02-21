@@ -110,7 +110,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 	// Init ads repository and service
 	adsRepo := repository.NewAdsRepository(queries)
-	adsService := app.NewAdsService(*adsRepo, *userRepo, *campaignRepo)
+	adsService := app.NewAdsService(*adsRepo, *userRepo, *campaignRepo, *timeRepo)
 
 	// Init ads handler
 	adsHandler := handlers.NewAdsHandler(adsService)
