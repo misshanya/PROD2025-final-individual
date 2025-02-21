@@ -114,6 +114,17 @@ definitions:
       login:
         type: string
     type: object
+  domain.UserAd:
+    properties:
+      ad_id:
+        type: string
+      ad_text:
+        type: string
+      ad_title:
+        type: string
+      advertiser_id:
+        type: string
+    type: object
   handlers.ErrorResponse:
     properties:
       details:
@@ -130,6 +141,32 @@ info:
   title: PROD Backend 2025 Advertising Platform API
   version: "1.0"
 paths:
+  /ads:
+    get:
+      parameters:
+      - description: UUID клиента, запрашивающего показ объявления
+        in: query
+        name: client_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.UserAd'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Получение рекламного объявления для клиента
+      tags:
+      - Ads
   /ads/{adId}/click:
     post:
       consumes:

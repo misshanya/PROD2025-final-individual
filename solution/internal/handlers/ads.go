@@ -22,6 +22,17 @@ func NewAdsHandler(service *app.AdsService) *AdsHandler {
 	}
 }
 
+// GetAd godoc
+//
+//	@Summary	Получение рекламного объявления для клиента
+//	@Desciption	Возвращает рекламное объявление, подходящее для показа клиенту с учетом таргетинга и ML скора
+//	@Tags		Ads
+//	@Produce	json
+//	@Param		client_id	query		string	true	"UUID клиента, запрашивающего показ объявления"
+//	@Success	200			{object}	domain.UserAd
+//	@Failure	404			{object}	ErrorResponse
+//	@Failure	500			{object}	ErrorResponse
+//	@Router		/ads [get]
 func (h *AdsHandler) GetAd(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

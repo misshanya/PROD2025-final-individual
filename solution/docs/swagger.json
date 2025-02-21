@@ -10,6 +10,46 @@
         "version": "1.0"
     },
     "paths": {
+        "/ads": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ads"
+                ],
+                "summary": "Получение рекламного объявления для клиента",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID клиента, запрашивающего показ объявления",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.UserAd"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/ads/{adId}/click": {
             "post": {
                 "consumes": [
@@ -879,6 +919,23 @@
                     "type": "string"
                 },
                 "login": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.UserAd": {
+            "type": "object",
+            "properties": {
+                "ad_id": {
+                    "type": "string"
+                },
+                "ad_text": {
+                    "type": "string"
+                },
+                "ad_title": {
+                    "type": "string"
+                },
+                "advertiser_id": {
                     "type": "string"
                 }
             }
