@@ -74,17 +74,25 @@ DELETE FROM campaigns
 WHERE id = @campaign_id::uuid;
 
 -- name: GetRelativeAd :one
-SELECT * FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
+SELECT * FROM campaigns 
+JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
 JOIN ml_scores ON campaigns.advertiser_id = ml_scores.advertiser_id
 WHERE 
+    NOT EXISTS (
+        SELECT 1 FROM impressions 
+        WHERE impressions.campaign_id = campaigns.id 
+          AND impressions.client_id = @client_id::uuid
+    ) AND
     (gender = @gender::varchar OR gender = 'ALL' OR gender IS NULL) AND
     (
-        ((age_from IS NULL AND age_to >= @age::int) OR (age_to IS NULL AND age_from <= @age::int) OR (age_from IS NULL AND age_to IS NULL)) OR
+        ((age_from IS NULL AND age_to >= @age::int) OR 
+         (age_to IS NULL AND age_from <= @age::int) OR 
+         (age_from IS NULL AND age_to IS NULL)) OR
         (age_from <= @age::int AND age_to >= @age::int)
     ) AND
     (location IS NULL OR location = @location::varchar) AND
     ml_scores.client_id = @client_id::uuid AND
     campaigns.start_date <= @cur_date::int AND 
     campaigns.end_date >= @cur_date::int
-ORDER BY score DESC
+ORDER BY score DESC, cost_per_impression DESC
 LIMIT 1;

@@ -256,27 +256,35 @@ func (q *Queries) GetCampaignsWithTargetingByAdvertiserID(ctx context.Context, a
 }
 
 const getRelativeAd = `-- name: GetRelativeAd :one
-SELECT campaigns.id, campaigns.advertiser_id, impressions_limit, clicks_limit, cost_per_impression, cost_per_click, ad_title, ad_text, start_date, end_date, pic_id, campaigns_targeting.id, campaign_id, gender, age_from, age_to, location, client_id, ml_scores.advertiser_id, score FROM campaigns JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
+SELECT campaigns.id, campaigns.advertiser_id, impressions_limit, clicks_limit, cost_per_impression, cost_per_click, ad_title, ad_text, start_date, end_date, pic_id, campaigns_targeting.id, campaign_id, gender, age_from, age_to, location, client_id, ml_scores.advertiser_id, score FROM campaigns 
+JOIN campaigns_targeting ON campaigns.id = campaigns_targeting.campaign_id
 JOIN ml_scores ON campaigns.advertiser_id = ml_scores.advertiser_id
 WHERE 
-    (gender = $1::varchar OR gender = 'ALL' OR gender IS NULL) AND
-    (
-        ((age_from IS NULL AND age_to >= $2::int) OR (age_to IS NULL AND age_from <= $2::int) OR (age_from IS NULL AND age_to IS NULL)) OR
-        (age_from <= $2::int AND age_to >= $2::int)
+    NOT EXISTS (
+        SELECT 1 FROM impressions 
+        WHERE impressions.campaign_id = campaigns.id 
+          AND impressions.client_id = $1::uuid
     ) AND
-    (location IS NULL OR location = $3::varchar) AND
-    ml_scores.client_id = $4::uuid AND
+    (gender = $2::varchar OR gender = 'ALL' OR gender IS NULL) AND
+    (
+        ((age_from IS NULL AND age_to >= $3::int) OR 
+         (age_to IS NULL AND age_from <= $3::int) OR 
+         (age_from IS NULL AND age_to IS NULL)) OR
+        (age_from <= $3::int AND age_to >= $3::int)
+    ) AND
+    (location IS NULL OR location = $4::varchar) AND
+    ml_scores.client_id = $1::uuid AND
     campaigns.start_date <= $5::int AND 
     campaigns.end_date >= $5::int
-ORDER BY score DESC
+ORDER BY score DESC, cost_per_impression DESC
 LIMIT 1
 `
 
 type GetRelativeAdParams struct {
+	ClientID uuid.UUID
 	Gender   string
 	Age      int32
 	Location string
-	ClientID uuid.UUID
 	CurDate  int32
 }
 
@@ -305,10 +313,10 @@ type GetRelativeAdRow struct {
 
 func (q *Queries) GetRelativeAd(ctx context.Context, arg GetRelativeAdParams) (GetRelativeAdRow, error) {
 	row := q.db.QueryRow(ctx, getRelativeAd,
+		arg.ClientID,
 		arg.Gender,
 		arg.Age,
 		arg.Location,
-		arg.ClientID,
 		arg.CurDate,
 	)
 	var i GetRelativeAdRow
