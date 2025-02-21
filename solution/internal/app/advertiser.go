@@ -38,12 +38,14 @@ func (s *AdvertiserService) GetByID(ctx context.Context, id uuid.UUID) (*domain.
 
 func (s *AdvertiserService) CreateUpdateMLScore(ctx context.Context, score *domain.MLScore) (*domain.MLScore, error) {
 	if _, err := s.repo.GetMLScore(ctx, score.ClientID, score.AdvertiserID); err == pgx.ErrNoRows {
-		s.repo.UpdateMLScore(ctx, score)
+		log.Println("Creating score")
+		err := s.repo.CreateMLScore(ctx, score)
+		if err != nil {
+			return nil, err
+		}
 		return score, nil
 	}
-	err := s.repo.CreateMLScore(ctx, score)
-	if err != nil {
-		return nil, err
-	}
+	log.Println("Updating score")
+	s.repo.UpdateMLScore(ctx, score)
 	return score, nil
 }
