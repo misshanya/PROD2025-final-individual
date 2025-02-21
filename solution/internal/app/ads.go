@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -37,9 +36,7 @@ func (s *AdsService) GetAd(ctx context.Context, clientId uuid.UUID) (*domain.Use
 		return nil, err
 	}
 
-	// TODO: FIX PANIC!!!!!!!
 	currentDate, err := s.timeRepo.GetCurrentDate(ctx)
-	log.Println(currentDate, err)
 	if err != nil {
 		return nil, err
 	}
