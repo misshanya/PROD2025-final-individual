@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 
@@ -31,7 +32,7 @@ func NewAdvertiserHandler(service *app.AdvertiserService) *AdvertiserHandler {
 //	@Produce		json
 //	@Success		201	{object}	[]domain.Advertiser
 //	@Failure		400	{object}	ErrorResponse
-//	@Failure		500	{object} ErrorResponse
+//	@Failure		500	{object}	ErrorResponse
 //	@Router			/advertisers/bulk [post]
 func (h *AdvertiserHandler) CreateAdvertisers(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -61,9 +62,9 @@ func (h *AdvertiserHandler) CreateAdvertisers(w http.ResponseWriter, r *http.Req
 //	@Tags			Advertisers
 //	@Produce		json
 //	@Success		200	{object}	domain.Advertiser
-//	@Failure		400	{object} ErrorResponse
-//	@Failure		404	{object} ErrorResponse
-//	@Failure		500	{object} ErrorResponse
+//	@Failure		400	{object}	ErrorResponse
+//	@Failure		404	{object}	ErrorResponse
+//	@Failure		500	{object}	ErrorResponse
 //	@Router			/advertisers/{advertiserId} [get]
 func (h *AdvertiserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -96,9 +97,10 @@ func (h *AdvertiserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Param			MLScore	body	domain.MLScore	true	"MLScore"
 //	@Produce		json
-//	@Success		200 {object} domain.MLScore
-//	@Failure		400	{object} ErrorResponse
-//	@Failure		500	{object} ErrorResponse
+//	@Success		200	{object}	domain.MLScore
+//	@Failure		404	{object}	ErrorResponse
+//	@Failure		400	{object}	ErrorResponse
+//	@Failure		500	{object}	ErrorResponse
 //	@Router			/ml-scores [post]
 func (h *AdvertiserHandler) CreateUpdateMLScore(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -112,8 +114,16 @@ func (h *AdvertiserHandler) CreateUpdateMLScore(w http.ResponseWriter, r *http.R
 
 	newScore, err := h.service.CreateUpdateMLScore(ctx, score)
 	if err != nil {
-		log.Printf("failed to create or update ml score: %v", err)
-		WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
+		switch {
+		case errors.Is(err, domain.ErrAdvertiserNotFound):
+			WriteError(w, http.StatusNotFound, "Рекламодатель не найден", "")
+		case errors.Is(err, domain.ErrUserNotFound):
+			WriteError(w, http.StatusNotFound, "Клиент не найден", "")
+		default:
+			log.Printf("failed to create or update ml score: %v", err)
+			WriteError(w, http.StatusInternalServerError, domain.ErrInternalServerError.Error(), "")
+		}
+
 		return
 	}
 

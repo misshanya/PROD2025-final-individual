@@ -82,7 +82,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 	// Init advertiser repository and service
 	advertiserRepo := repository.NewAdvertiserRepository(queries)
-	advertiserService := app.NewAdvertiserService(*advertiserRepo)
+	advertiserService := app.NewAdvertiserService(*advertiserRepo, *userRepo)
 
 	// Init advertiser handler
 	advertiserHandler := handlers.NewAdvertiserHandler(advertiserService)

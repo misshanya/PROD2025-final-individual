@@ -10,12 +10,15 @@ import (
 )
 
 type AdvertiserService struct {
-	repo repository.AdvertiserRepository
+	repo     repository.AdvertiserRepository
+	userRepo repository.UserRepository
 }
 
-func NewAdvertiserService(repo repository.AdvertiserRepository) *AdvertiserService {
+func NewAdvertiserService(repo repository.AdvertiserRepository,
+	userRepo repository.UserRepository) *AdvertiserService {
 	return &AdvertiserService{
-		repo: repo,
+		repo:     repo,
+		userRepo: userRepo,
 	}
 }
 
@@ -37,6 +40,15 @@ func (s *AdvertiserService) GetByID(ctx context.Context, id uuid.UUID) (*domain.
 }
 
 func (s *AdvertiserService) CreateUpdateMLScore(ctx context.Context, score *domain.MLScore) (*domain.MLScore, error) {
+	_, err := s.repo.GetByID(ctx, score.AdvertiserID)
+	if err != nil {
+		return nil, err
+	}
+	_, err = s.userRepo.GetByID(ctx, score.ClientID)
+	if err != nil {
+		return nil, err
+	}
+
 	if _, err := s.repo.GetMLScore(ctx, score.ClientID, score.AdvertiserID); err == pgx.ErrNoRows {
 		err := s.repo.CreateMLScore(ctx, score)
 		if err != nil {
