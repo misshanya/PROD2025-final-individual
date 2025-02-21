@@ -53,22 +53,10 @@ func (s *CampaignService) CreateCampaign(ctx context.Context, advertiserID uuid.
 		return nil, domain.ErrBadRequest
 	}
 
-	// Check if moderation is turned on
-	isModerated, err := s.checkModeration(ctx)
-	if err != nil {
+	if err := s.validateModeration(ctx, campaignRequest.AdTitle, campaignRequest.AdText); err != nil {
 		return nil, err
 	}
-	if isModerated {
-		// Combine ad title and ad text into one string to check both at once
-		allText := fmt.Sprintf("Название: %s; Описание: %s", campaignRequest.AdTitle, campaignRequest.AdText)
-		isAllowed, err := s.openAIService.ValidateAdText(ctx, allText)
-		if err != nil {
-			return nil, err
-		}
-		if !isAllowed {
-			return nil, domain.ErrModerationNotPassed
-		}
-	}
+
 	currentDate, err := s.timeRepo.GetCurrentDate(ctx)
 	if err != nil {
 		return nil, err
@@ -160,21 +148,8 @@ func (s *CampaignService) UpdateCampaign(ctx context.Context, advertiserID, camp
 		return nil, domain.ErrBadRequest
 	}
 
-	// Check if moderation is turned on
-	isModerated, err := s.checkModeration(ctx)
-	if err != nil {
+	if err := s.validateModeration(ctx, campaignUpdate.AdTitle, campaignUpdate.AdText); err != nil {
 		return nil, err
-	}
-	if isModerated {
-		// Combine ad title and ad text into one string to check both at once
-		allText := fmt.Sprintf("Название: %s; Описание: %s", campaignUpdate.AdTitle, campaignUpdate.AdText)
-		isAllowed, err := s.openAIService.ValidateAdText(ctx, allText)
-		if err != nil {
-			return nil, err
-		}
-		if !isAllowed {
-			return nil, domain.ErrModerationNotPassed
-		}
 	}
 
 	// Get current day
@@ -266,4 +241,22 @@ func isValidGender(gender string) bool {
 	}
 	_, exists := validGenders[gender]
 	return exists
+}
+
+func (s *CampaignService) validateModeration(ctx context.Context, adTitle, adText string) error {
+	isModerated, err := s.checkModeration(ctx)
+	if err != nil {
+		return err
+	}
+	if isModerated {
+		allText := fmt.Sprintf("Название: %s; Описание: %s", adTitle, adText)
+		isAllowed, err := s.openAIService.ValidateAdText(ctx, allText)
+		if err != nil {
+			return err
+		}
+		if !isAllowed {
+			return domain.ErrModerationNotPassed
+		}
+	}
+	return nil
 }
